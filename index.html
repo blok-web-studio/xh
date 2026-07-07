@@ -2,902 +2,549 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>xh — HTTP, made human</title>
-<meta name="description" content="xh is a friendly, fast HTTP client for developers. Like HTTPie but written in Rust. Zero-config JSON, colorized output, sessions, and more.">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>xh</title>
+<meta name="description" content="xh — HTTP, made human. A friendly, fast HTTP client written in Rust.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23ff6b35'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='monospace' font-size='18' font-weight='bold' fill='white'%3Exh%3C/text%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css">
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --bg: #08080c;
-  --bg-alt: #0c0c14;
-  --surface: #111118;
-  --surface-alt: #16161f;
-  --border: #1e1e2a;
-  --border-active: #2e2e44;
-  --text: #e4e4ec;
-  --text-muted: #6a6a82;
-  --text-dim: #4a4a5e;
-  --accent: #ff6b35;
-  --accent-glow: rgba(255, 107, 53, 0.15);
-  --green: #4ade80;
-  --blue: #60a5fa;
-  --yellow: #fbbf24;
-  --pink: #f472b6;
-  --cyan: #22d3ee;
-  --term-bg: #0a0a0f;
-  --term-border: #1a1a28;
-  --radius: 8px;
-  --radius-lg: 14px;
-  --font-display: 'Inter', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0c0c10;
+  --surface:#14141c;
+  --border:#23232f;
+  --text:#e0e0ec;
+  --muted:#6a6a82;
+  --dim:#3a3a4e;
+  --green:#4ade80;
+  --orange:#ff6b35;
+  --blue:#60a5fa;
+  --pink:#f472b6;
+  --yellow:#fbbf24;
+  --cyan:#22d3ee;
+  --red:#ef4444;
+  --font:'JetBrains Mono','SF Mono',monospace;
 }
-html { scroll-behavior: smooth; }
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-display);
-  -webkit-font-smoothing: antialiased;
-  line-height: 1.6;
-  overflow-x: hidden;
-}
-::selection { background: var(--accent); color: #fff; }
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow:hidden}
+body{display:flex;flex-direction:column}
 
-/* Noise overlay */
-body::after {
-  content: ''; position: fixed; inset: 0; z-index: 9999;
-  pointer-events: none; opacity: 0.025;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+/* ─── TERMINAL FRAME ─── */
+.term-frame{
+  flex:1;display:flex;flex-direction:column;
+  margin:12px;border-radius:10px;overflow:hidden;
+  border:1px solid var(--border);background:var(--bg);
+  box-shadow:0 24px 80px rgba(0,0,0,0.6);
+  transform-style:preserve-3d;perspective:900px;
+}
+.term-titlebar{
+  display:flex;align-items:center;gap:8px;
+  padding:12px 18px;background:var(--surface);
+  border-bottom:1px solid var(--border);flex-shrink:0;user-select:none;
+}
+.term-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+.term-dot.r{background:#ff5f57}
+.term-dot.y{background:#ffbd2e}
+.term-dot.g{background:#28c840}
+.term-title{
+  font-size:11px;color:var(--dim);margin-left:8px;
+  letter-spacing:0.02em;text-transform:uppercase;
+}
+.term-body{
+  flex:1;overflow-y:auto;padding:20px 24px 40px;
+  scroll-behavior:smooth;
+}
+.term-body::-webkit-scrollbar{width:5px}
+.term-body::-webkit-scrollbar-track{background:transparent}
+.term-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* ─── TERMINAL OUTPUT LINES ─── */
+.line{opacity:0;margin-bottom:0;transform:translateY(8px);transition:opacity 0.4s ease,transform 0.4s ease}
+.line.show{opacity:1;transform:translateY(0)}
+.prompt{color:var(--green);user-select:none}
+.cmd{color:var(--text)}
+.res{padding:8px 0 8px 22px;color:var(--muted);line-height:1.8;font-size:13px}
+.res .k{color:var(--blue)}
+.res .s{color:var(--green)}
+.res .n{color:var(--pink)}
+.res .b{color:var(--yellow)}
+.res .x{color:var(--dim);font-style:italic}
+.res .h{color:var(--cyan)}
+.res .o{color:var(--orange)}
+spacer{display:block;height:8px}
+
+/* ASCII art logo */
+.logo-art{
+  font-size:11px;line-height:1.15;color:var(--orange);white-space:pre;
+  padding:8px 0 8px 22px;letter-spacing:0;user-select:none;
 }
 
-/* Nav */
-.nav {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-  height: 56px; display: flex; align-items: center;
-  justify-content: space-between; padding: 0 24px;
-  background: rgba(8, 8, 12, 0.8); backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border);
+/* Feature grid (rendered as terminal output) */
+.feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;padding:8px 0 8px 22px}
+.feat-item{
+  background:var(--surface);padding:12px 16px;
+  border:1px solid var(--border);border-radius:6px;
+  font-size:12.5px;line-height:1.5;
 }
-.nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); font-weight: 700; font-size: 1.1rem; font-family: var(--font-mono); }
-.nav-logo span { color: var(--accent); }
-.nav-links { display: flex; align-items: center; gap: 20px; }
-.nav-links a { color: var(--text-muted); text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: color 0.2s; }
-.nav-links a:hover { color: var(--text); }
-.nav-btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 7px 16px; background: var(--surface-alt);
-  border: 1px solid var(--border); border-radius: 6px;
-  color: var(--text); text-decoration: none; font-size: 0.8rem;
-  font-weight: 500; transition: all 0.2s;
+.feat-item .tag{
+  display:inline-block;padding:1px 7px;border-radius:3px;
+  font-size:10px;font-weight:500;margin-bottom:4px;letter-spacing:0.03em;
 }
-.nav-btn:hover { background: var(--border); border-color: var(--border-active); }
-.nav-btn i { font-size: 16px; color: var(--text-muted); }
+.feat-item .tag.json{background:rgba(96,165,250,0.12);color:var(--blue)}
+.feat-item .tag.auth{background:rgba(74,222,128,0.12);color:var(--green)}
+.feat-item .tag.session{background:rgba(251,191,36,0.12);color:var(--yellow)}
+.feat-item .tag.pipe{background:rgba(244,114,182,0.12);color:var(--pink)}
+.feat-item .tag.dl{background:rgba(34,211,238,0.12);color:var(--cyan)}
+.feat-item .tag.fast{background:rgba(255,107,53,0.12);color:var(--orange)}
+.feat-item .name{font-weight:500;color:var(--text)}
+.feat-item .desc{color:var(--muted);font-size:11.5px;margin-top:2px}
 
-/* Section base */
-section { position: relative; padding: 100px 24px; }
-.section-inner { max-width: 1100px; margin: 0 auto; }
+/* Stats row */
+.stats-row{display:flex;gap:1px;padding:8px 0 8px 22px}
+.stat-cell{
+  flex:1;background:var(--surface);border:1px solid var(--border);
+  border-radius:6px;padding:12px 16px;text-align:center;
+}
+.stat-cell .val{font-size:18px;font-weight:500;color:var(--text)}
+.stat-cell .val .o{color:var(--orange)}
+.stat-cell .lbl{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;margin-top:2px}
 
-/* ─── HERO ─── */
-.hero {
-  min-height: 100vh; display: flex; flex-direction: column;
-  justify-content: center; padding: 120px 24px 80px;
-  position: relative; overflow: hidden;
+/* Install block */
+.install-block{padding:8px 0 8px 22px;display:flex;flex-direction:column;gap:6px}
+.install-row{
+  display:flex;align-items:center;gap:12px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:6px;padding:10px 14px;
 }
-.hero::before {
-  content: ''; position: absolute; top: 50%; left: 50%;
-  width: 800px; height: 800px; transform: translate(-50%, -50%);
-  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 60%);
-  pointer-events: none;
+.install-row .label{color:var(--dim);font-size:11px;min-width:55px;text-transform:uppercase;letter-spacing:0.06em}
+.install-row .code{color:var(--text);flex:1}
+.install-row .copy-btn{
+  background:transparent;border:1px solid var(--border);color:var(--muted);
+  padding:4px 10px;border-radius:4px;font-family:var(--font);font-size:11px;
+  cursor:pointer;transition:all 0.15s;
 }
-.hero-content { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; width: 100%; }
-.hero-badge {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 4px 12px; background: rgba(255, 107, 53, 0.1);
-  border: 1px solid rgba(255, 107, 53, 0.2); border-radius: 999px;
-  font-size: 0.75rem; font-weight: 600; color: var(--accent);
-  margin-bottom: 24px; letter-spacing: 0.02em;
-}
-.hero-badge i { font-size: 14px; }
-.hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
-.hero-text { }
-.hero-label {
-  font-family: var(--font-mono); font-size: 0.75rem;
-  color: var(--text-muted); letter-spacing: 0.15em;
-  text-transform: uppercase; margin-bottom: 12px;
-}
-.hero-title {
-  font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 800;
-  line-height: 1.0; letter-spacing: -0.04em; margin-bottom: 16px;
-}
-.hero-title .accent { color: var(--accent); }
-.hero-title .mono { font-family: var(--font-mono); font-weight: 500; }
-.hero-sub {
-  font-size: 1.05rem; color: var(--text-muted); max-width: 440px;
-  line-height: 1.7; margin-bottom: 28px;
-}
-.hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
-.btn-primary {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 12px 24px; background: var(--accent); color: #fff;
-  border: none; border-radius: var(--radius); font-size: 0.9rem;
-  font-weight: 600; text-decoration: none; cursor: pointer;
-  transition: all 0.2s; font-family: var(--font-display);
-}
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px var(--accent-glow); }
-.btn-secondary {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 12px 24px; background: var(--surface);
-  border: 1px solid var(--border); border-radius: var(--radius);
-  color: var(--text); font-size: 0.9rem; font-weight: 500;
-  text-decoration: none; cursor: pointer;
-  transition: all 0.2s; font-family: var(--font-display);
-}
-.btn-secondary:hover { background: var(--surface-alt); border-color: var(--border-active); }
+.install-row .copy-btn:hover{background:var(--surface);border-color:var(--dim);color:var(--text)}
+.install-row .copy-btn.ok{background:rgba(74,222,128,0.1);border-color:var(--green);color:var(--green)}
 
-/* Terminal in hero */
-.hero-terminal {
-  background: var(--term-bg); border: 1px solid var(--term-border);
-  border-radius: var(--radius-lg); overflow: hidden;
-  box-shadow: 0 24px 80px rgba(0,0,0,0.4);
-  transform-style: preserve-3d;
-  perspective: 800px;
-  transition: box-shadow 0.3s ease;
+/* BLOK footer */
+.footer-line{
+  padding:6px 0 0 0;margin-top:12px;border-top:1px solid var(--border);
 }
-.term-header {
-  display: flex; align-items: center; gap: 8px;
-  padding: 12px 16px; background: var(--surface-alt);
-  border-bottom: 1px solid var(--term-border);
-}
-.term-dot { width: 10px; height: 10px; border-radius: 50%; }
-.term-dot.r { background: #ff5f57; }
-.term-dot.y { background: #ffbd2e; }
-.term-dot.g { background: #28c840; }
-.term-title { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-dim); margin-left: 8px; }
-.term-body { padding: 20px; font-family: var(--font-mono); font-size: 0.82rem; line-height: 1.7; }
-.term-line { opacity: 0; white-space: pre-wrap; }
-.term-prompt { color: var(--green); }
-.term-cmd { color: var(--text); }
-.term-output { color: var(--text-muted); padding-left: 0; }
-.term-json-key { color: var(--blue); }
-.term-json-str { color: var(--green); }
-.term-json-num { color: var(--pink); }
-.term-json-bool { color: var(--yellow); }
-.term-json-null { color: var(--text-dim); font-style: italic; }
-.term-cursor {
-  display: inline-block; width: 8px; height: 16px;
-  background: var(--green); animation: blink 1s step-end infinite;
-  vertical-align: text-bottom; margin-left: 2px;
-}
-@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+.footer-line .muted{color:var(--dim);font-size:12px}
+.footer-line a{color:var(--muted);text-decoration:none;transition:color 0.2s}
+.footer-line a:hover{color:var(--orange)}
 
-.term-response { margin-top: 12px; border-top: 1px solid var(--term-border); padding-top: 12px; }
-
-/* ─── COMPARISON SECTION ─── */
-.comparison { background: var(--bg-alt); }
-.section-label {
-  font-family: var(--font-mono); font-size: 0.7rem;
-  color: var(--accent); letter-spacing: 0.2em;
-  text-transform: uppercase; margin-bottom: 8px;
-  display: flex; align-items: center; gap: 8px;
+/* Fixed bottom prompt */
+.bottom-prompt{
+  position:fixed;bottom:0;left:0;right:0;
+  padding:14px 24px 18px;
+  background:linear-gradient(transparent,var(--bg) 40%);
+  font-size:14px;z-index:10;pointer-events:none;
 }
-.section-label::before {
-  content: ''; display: inline-block; width: 6px; height: 6px;
-  border-radius: 50%; background: var(--accent);
+.bottom-prompt .cursor{
+  display:inline-block;width:9px;height:17px;
+  background:var(--green);animation:blink 1s step-end infinite;
+  vertical-align:text-bottom;margin-left:3px;
 }
-.section-title {
-  font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 700;
-  line-height: 1.2; letter-spacing: -0.03em; margin-bottom: 16px;
-}
-.section-sub {
-  font-size: 0.95rem; color: var(--text-muted); max-width: 500px;
-  line-height: 1.7; margin-bottom: 40px;
-}
-.comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-.compare-card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius-lg); overflow: hidden;
-}
-.compare-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 16px 20px; border-bottom: 1px solid var(--border);
-  font-family: var(--font-mono); font-size: 0.8rem; font-weight: 500;
-}
-.compare-bad { border-color: rgba(239, 68, 68, 0.2); }
-.compare-bad .compare-header { background: rgba(239, 68, 68, 0.05); color: #ef4444; border-color: rgba(239, 68, 68, 0.2); }
-.compare-good { border-color: rgba(74, 222, 128, 0.2); }
-.compare-good .compare-header { background: rgba(74, 222, 128, 0.05); color: var(--green); border-color: rgba(74, 222, 128, 0.2); }
-.compare-body { padding: 20px; font-family: var(--font-mono); font-size: 0.78rem; line-height: 1.6; overflow-x: auto; }
-.compare-body code { color: var(--text-muted); }
-.compare-good .compare-body .hl { color: var(--green); }
-.compare-bad .compare-body .hl-red { color: #ef4444; }
-
-/* ─── FEATURES ─── */
-.features-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.feature-card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius-lg); padding: 28px;
-  transition: all 0.3s; cursor: default;
-}
-.feature-card:hover { border-color: var(--border-active); transform: translateY(-3px); }
-.feature-icon {
-  width: 40px; height: 40px; border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  margin-bottom: 16px; font-size: 20px;
-}
-.feature-icon.json { background: rgba(96, 165, 250, 0.1); color: var(--blue); }
-.feature-icon.auth { background: rgba(74, 222, 128, 0.1); color: var(--green); }
-.feature-icon.session { background: rgba(251, 191, 36, 0.1); color: var(--yellow); }
-.feature-icon.color { background: rgba(244, 114, 182, 0.1); color: var(--pink); }
-.feature-icon.download { background: rgba(34, 211, 238, 0.1); color: var(--cyan); }
-.feature-icon.plugin { background: rgba(255, 107, 53, 0.1); color: var(--accent); }
-.feature-name { font-size: 1rem; font-weight: 600; margin-bottom: 6px; }
-.feature-desc { font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; }
-
-/* ─── PLAYGROUND ─── */
-.playground { background: var(--bg-alt); }
-.playground-container {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius-lg); overflow: hidden;
-}
-.playground-tabs {
-  display: flex; border-bottom: 1px solid var(--border); background: var(--surface-alt);
-}
-.playground-tab {
-  padding: 12px 20px; font-family: var(--font-mono); font-size: 0.78rem;
-  color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent;
-  transition: all 0.2s; user-select: none;
-}
-.playground-tab:hover { color: var(--text); }
-.playground-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-.playground-body { padding: 0; }
-.playground-input-row {
-  display: flex; align-items: center; gap: 0;
-  border-bottom: 1px solid var(--border); padding: 12px 20px;
-  font-family: var(--font-mono); font-size: 0.82rem;
-}
-.playground-prompt { color: var(--green); margin-right: 10px; user-select: none; }
-.playground-input {
-  flex: 1; background: transparent; border: none; outline: none;
-  color: var(--text); font-family: var(--font-mono); font-size: 0.82rem;
-  caret-color: var(--green);
-}
-.playground-input::placeholder { color: var(--text-dim); }
-.playground-run {
-  padding: 6px 14px; background: var(--accent); color: #fff;
-  border: none; border-radius: 6px; font-size: 0.75rem;
-  font-weight: 600; cursor: pointer; font-family: var(--font-display);
-  transition: all 0.2s;
-}
-.playground-run:hover { box-shadow: 0 4px 16px var(--accent-glow); }
-.playground-output {
-  padding: 20px; font-family: var(--font-mono); font-size: 0.8rem;
-  line-height: 1.6; min-height: 160px; max-height: 360px; overflow-y: auto;
-  white-space: pre-wrap;
-}
-.playground-output .empty-state {
-  color: var(--text-dim); text-align: center; padding: 40px 0;
-}
-.playground-output .syntax-str { color: var(--green); }
-.playground-output .syntax-key { color: var(--blue); }
-.playground-output .syntax-num { color: var(--pink); }
-.playground-output .syntax-bool { color: var(--yellow); }
-.playground-output .syntax-null { color: var(--text-dim); font-style: italic; }
-.playground-output .syntax-bracket { color: var(--text-muted); }
-.playground-output .http-line { display: block; margin-bottom: 4px; }
-
-/* ─── INSTALL ─── */
-.install-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.install-card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 16px 20px;
-  display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  transition: border-color 0.2s;
-}
-.install-card:hover { border-color: var(--border-active); }
-.install-label { font-size: 0.78rem; color: var(--text-muted); font-weight: 500; margin-bottom: 4px; }
-.install-cmd { font-family: var(--font-mono); font-size: 0.82rem; color: var(--text); }
-.install-copy {
-  display: inline-flex; align-items: center; gap: 4px;
-  padding: 5px 10px; background: transparent; border: 1px solid var(--border);
-  border-radius: 6px; color: var(--text-muted); font-size: 0.72rem;
-  cursor: pointer; font-family: var(--font-display); transition: all 0.2s; white-space: nowrap;
-}
-.install-copy:hover { background: var(--surface-alt); color: var(--text); border-color: var(--border-active); }
-.install-copy.copied { background: rgba(74, 222, 128, 0.1); border-color: var(--green); color: var(--green); }
-
-/* ─── STATS ─── */
-.stats { }
-.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-.stat-card {
-  text-align: center; padding: 32px 16px;
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-}
-.stat-value {
-  font-family: var(--font-mono); font-size: 2rem; font-weight: 700;
-  color: var(--text); margin-bottom: 4px;
-}
-.stat-value .accent { color: var(--accent); }
-.stat-label { font-size: 0.8rem; color: var(--text-muted); }
-
-/* ─── FOOTER ─── */
-.footer {
-  border-top: 1px solid var(--border); padding: 48px 24px 32px;
-  background: var(--bg-alt);
-}
-.footer-inner { max-width: 1100px; margin: 0 auto; }
-.footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px; margin-bottom: 32px; }
-.footer-brand .footer-logo { font-family: var(--font-mono); font-weight: 700; font-size: 1rem; margin-bottom: 8px; }
-.footer-brand .footer-logo span { color: var(--accent); }
-.footer-desc { font-size: 0.82rem; color: var(--text-muted); line-height: 1.6; max-width: 320px; }
-.footer-heading { font-size: 0.72rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }
-.footer-links { list-style: none; }
-.footer-links li { margin-bottom: 8px; }
-.footer-links a { color: var(--text-dim); text-decoration: none; font-size: 0.82rem; transition: color 0.2s; }
-.footer-links a:hover { color: var(--text); }
-.footer-bottom {
-  border-top: 1px solid var(--border); padding-top: 20px;
-  display: flex; justify-content: space-between; align-items: center;
-  font-size: 0.75rem; color: var(--text-dim);
-}
-.footer-bottom a { color: var(--text-muted); text-decoration: none; }
-.footer-bottom a:hover { color: var(--text); }
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 
 /* ─── RESPONSIVE ─── */
-@media (max-width: 800px) {
-  .hero-grid { grid-template-columns: 1fr; gap: 32px; }
-  .comparison-grid { grid-template-columns: 1fr; }
-  .features-grid { grid-template-columns: 1fr; }
-  .install-grid { grid-template-columns: 1fr; }
-  .stats-grid { grid-template-columns: repeat(2, 1fr); }
-  .footer-grid { grid-template-columns: 1fr; gap: 24px; }
-  .nav-links .nav-link-text { display: none; }
-  .hero-title { font-size: clamp(1.8rem, 8vw, 2.8rem); }
-  .playground-tabs { overflow-x: auto; }
+@media(max-width:700px){
+  .term-frame{margin:8px;border-radius:8px}
+  .term-body{padding:14px 14px 30px;font-size:13px}
+  .logo-art{font-size:9px}
+  .feat-grid{grid-template-columns:1fr}
+  .stats-row{flex-wrap:wrap}
+  .stat-cell{min-width:45%}
+  .res{font-size:12px;padding-left:14px}
+  .install-row{flex-wrap:wrap}
 }
-@media (max-width: 480px) {
-  section { padding: 60px 16px; }
-  .stats-grid { grid-template-columns: 1fr 1fr; }
-  .hero { padding: 100px 16px 60px; }
-  .install-card { flex-direction: column; align-items: flex-start; }
+@media(max-width:450px){
+  .term-body{font-size:12px;padding:10px 10px 24px}
+  .install-row .label{min-width:40px;font-size:10px}
+  .logo-art{font-size:7px}
 }
 </style>
 </head>
 <body>
 
-<!-- NAV -->
-<nav class="nav">
-  <a href="#" class="nav-logo"><span>$</span> xh</a>
-  <div class="nav-links">
-    <a href="#features" class="nav-link-text">Features</a>
-    <a href="#playground" class="nav-link-text">Playground</a>
-    <a href="#install" class="nav-link-text">Install</a>
-    <a href="https://github.com/ducaale/xh" target="_blank" rel="noopener" class="nav-btn">
-      <i class="ph-duotone ph-github-logo"></i> <span class="nav-link-text">GitHub</span>
-    </a>
+<!-- TERMINAL FRAME -->
+<div class="term-frame" id="termFrame">
+  <div class="term-titlebar">
+    <span class="term-dot r"></span>
+    <span class="term-dot y"></span>
+    <span class="term-dot g"></span>
+    <span class="term-title">xh — HTTP, made human</span>
   </div>
-</nav>
+  <div class="term-body" id="termBody">
 
-<!-- HERO -->
-<section class="hero" id="hero">
-  <div class="hero-content">
-    <div class="hero-badge"><i class="ph-duotone ph-lightning"></i> 7.9k GitHub stars · Rust-powered</div>
-    <div class="hero-grid">
-      <div class="hero-text">
-        <div class="hero-label">HTTP · made human</div>
-        <h1 class="hero-title">
-          Requests<br>
-          <span class="accent">without</span><br>
-          <span class="mono">the&nbsp;noise</span>
-        </h1>
-        <p class="hero-sub">
-          xh is a friendly HTTP client written in Rust. Colourful output, JSON built-in,
-          sessions, and a terminal experience that actually respects your time.
-        </p>
-        <div class="hero-actions">
-          <a href="#install" class="btn-primary"><i class="ph-duotone ph-download-simple"></i> Install</a>
-          <a href="#playground" class="btn-secondary"><i class="ph-duotone ph-play"></i> Try online</a>
-        </div>
-      </div>
-      <div class="hero-terminal" id="heroTerminal">
-        <div class="term-header">
-          <span class="term-dot r"></span>
-          <span class="term-dot y"></span>
-          <span class="term-dot g"></span>
-          <span class="term-title">xh — ~/project</span>
-        </div>
-        <div class="term-body" id="termBody">
-          <div class="term-line" id="tl1">
-            <span class="term-prompt">$ </span><span class="term-cmd">xh GET https://api.github.com/repos/ducaale/xh</span>
-          </div>
-          <div class="term-line term-response" id="tl2">
-            <span class="term-output">HTTP/2.0 200 OK<br>
-<span class="term-json-key">"name"</span>: <span class="term-json-str">"xh"</span><br>
-<span class="term-json-key">"description"</span>: <span class="term-json-str">"Friendly HTTP requests for the terminal"</span><br>
-<span class="term-json-key">"stars"</span>: <span class="term-json-num">7936</span><br>
-<span class="term-json-key">"language"</span>: <span class="term-json-str">"Rust"</span><br>
-<span class="term-json-key">"license"</span>: <span class="term-json-str">"MIT"</span></span>
-          </div>
-          <div class="term-line" id="tl3" style="margin-top:16px">
-            <span class="term-prompt">$ </span><span class="term-cmd">_</span><span class="term-cursor"></span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+    <!-- Lines are dynamically populated by JS -->
+    <div id="linesContainer"></div>
 
-<!-- COMPARISON -->
-<section class="comparison" id="comparison">
-  <div class="section-inner">
-    <div class="section-label">Stop Fighting Curl</div>
-    <h2 class="section-title">curl vs <span class="accent">xh</span></h2>
-    <p class="section-sub">Same request. One is readable. The other is noise.</p>
-    <div class="comparison-grid">
-      <div class="compare-card compare-bad">
-        <div class="compare-header">
-          <span><i class="ph-duotone ph-prohibit"></i> curl</span>
-          <span style="font-weight:400;font-size:0.7rem;color:var(--text-dim)">16 flags just for JSON</span>
-        </div>
-        <div class="compare-body">
-          <code>$ curl -s -H "Accept: application/json" \<br>
-          &nbsp;&nbsp;-H "Authorization: Bearer $TOKEN" \<br>
-          &nbsp;&nbsp;-X POST https://api.example.com/data \<br>
-          &nbsp;&nbsp;-d '{"name":"xh","type":"tool"}' \<br>
-          &nbsp;&nbsp;| jq .<br><br>
-          <span class="hl-red">// 37 seconds later...<br>// Still debugging flags</span></code>
-        </div>
-      </div>
-      <div class="compare-card compare-good">
-        <div class="compare-header">
-          <span><i class="ph-duotone ph-check-circle"></i> xh</span>
-          <span style="font-weight:400;font-size:0.7rem;color:var(--text-dim)">0 flags. Just works.</span>
-        </div>
-        <div class="compare-body">
-          <code>$ xh POST https://api.example.com/data \<br>
-          &nbsp;&nbsp;name=xh type=tool \<br>
-          &nbsp;&nbsp;Authorization:"Bearer $TOKEN"<br><br>
-          <span class="hl">HTTP/2.0 201 Created<br>
-          {<br>
-          &nbsp;&nbsp;"id": "42",<br>
-          &nbsp;&nbsp;"name": "xh",<br>
-          &nbsp;&nbsp;"created": "2024-01-15"<br>
-          }</span></code>
-        </div>
-      </div>
-    </div>
   </div>
-</section>
+</div>
 
-<!-- FEATURES -->
-<section id="features">
-  <div class="section-inner">
-    <div class="section-label">Built for Humans</div>
-    <h2 class="section-title">Everything you need.<br>Nothing you don't.</h2>
-    <p class="section-sub">xh rethinks HTTP from the terminal up — colour, structure, and zero unnecessary ceremony.</p>
-    <div class="features-grid">
-      <div class="feature-card">
-        <div class="feature-icon json"><i class="ph-duotone ph-brackets-curly"></i></div>
-        <div class="feature-name">JSON by default</div>
-        <div class="feature-desc">Every response is automatically formatted and syntax-highlighted. No piping to <code style="font-family:var(--font-mono);font-size:0.8rem">jq</code> required. Headers, body, status — all colour-coded at a glance.</div>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon auth"><i class="ph-duotone ph-fingerprint"></i></div>
-        <div class="feature-name">Native Auth</div>
-        <div class="feature-desc">Bearer tokens, basic auth, API keys — xh handles them inline. <code style="font-family:var(--font-mono);font-size:0.8rem">Authorization:bearer $TOKEN</code> just works.</div>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon session"><i class="ph-duotone ph-floppy-disk"></i></div>
-        <div class="feature-name">Persistent Sessions</div>
-        <div class="feature-desc">Log in once, reuse across requests. Sessions persist cookies and headers so you don't have to replay auth every time.</div>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon color"><i class="ph-duotone ph-palette"></i></div>
-        <div class="feature-name">Colourised Output</div>
-        <div class="feature-desc">Every response type has its own colour scheme. Headers in cyan, keys in blue, strings in green — your terminal becomes readable instantly.</div>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon download"><i class="ph-duotone ph-arrow-fat-down"></i></div>
-        <div class="feature-name">Download Support</div>
-        <div class="feature-desc">Download files directly from the terminal. Progress bars, resume support, and automatic filename detection included.</div>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon plugin"><i class="ph-duotone ph-puzzle-piece"></i></div>
-        <div class="feature-name">Blazing Fast</div>
-        <div class="feature-desc">Written in Rust, built for speed. No Node dependency, no Python overhead. A single static binary, zero setup.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- PLAYGROUND -->
-<section class="playground" id="playground">
-  <div class="section-inner">
-    <div class="section-label">Try it Now</div>
-    <h2 class="section-title">Type a command.<br>See it work.</h2>
-    <p class="section-sub">No install needed. Type an <code style="font-family:var(--font-mono);font-size:0.85rem">xh</code> command below and see what happens.</p>
-    <div class="playground-container">
-      <div class="playground-tabs" id="playgroundTabs">
-        <div class="playground-tab active" data-demo="users">GET /users</div>
-        <div class="playground-tab" data-demo="post">POST /data</div>
-        <div class="playground-tab" data-demo="auth">Auth</div>
-        <div class="playground-tab" data-demo="headers">Headers</div>
-      </div>
-      <div class="playground-body">
-        <div class="playground-input-row">
-          <span class="playground-prompt">$</span>
-          <input class="playground-input" id="playgroundInput" type="text" placeholder="xh GET https://api.example.com/users" spellcheck="false" autocomplete="off">
-          <button class="playground-run" id="playgroundRun">Run</button>
-        </div>
-        <div class="playground-output" id="playgroundOutput">
-          <div class="empty-state">▸ Type a command or click a preset above</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- INSTALL -->
-<section id="install">
-  <div class="section-inner">
-    <div class="section-label">Get Started</div>
-    <h2 class="section-title">Install in one line.</h2>
-    <p class="section-sub">Works on macOS, Linux, and Windows. One binary, zero dependencies.</p>
-    <div class="install-grid">
-      <div class="install-card">
-        <div>
-          <div class="install-label">macOS (Homebrew)</div>
-          <div class="install-cmd">brew install xh</div>
-        </div>
-        <button class="install-copy" data-cmd="brew install xh">Copy</button>
-      </div>
-      <div class="install-card">
-        <div>
-          <div class="install-label">Cargo</div>
-          <div class="install-cmd">cargo install xh</div>
-        </div>
-        <button class="install-copy" data-cmd="cargo install xh">Copy</button>
-      </div>
-      <div class="install-card">
-        <div>
-          <div class="install-label">Linux (APT)</div>
-          <div class="install-cmd">snap install xh</div>
-        </div>
-        <button class="install-copy" data-cmd="snap install xh">Copy</button>
-      </div>
-      <div class="install-card">
-        <div>
-          <div class="install-label">Nix</div>
-          <div class="install-cmd">nix-shell -p xh</div>
-        </div>
-        <button class="install-copy" data-cmd="nix-shell -p xh">Copy</button>
-      </div>
-      <div class="install-card" style="grid-column:1/-1">
-        <div>
-          <div class="install-label">macOS / Linux (binary)</div>
-          <div class="install-cmd">curl -fsSL https://github.com/ducaale/xh/releases/latest/download/xh-$(uname -s)-$(uname -m).tar.gz | tar xz && sudo mv xh /usr/local/bin</div>
-        </div>
-        <button class="install-copy" data-cmd='curl -fsSL https://github.com/ducaale/xh/releases/latest/download/xh-$(uname -s)-$(uname -m).tar.gz | tar xz && sudo mv xh /usr/local/bin'>Copy</button>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- STATS -->
-<section class="comparison" id="stats">
-  <div class="section-inner">
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-value"><span class="accent">7.9</span>k</div>
-        <div class="stat-label">GitHub Stars</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value">1.8<span class="accent">k</span></div>
-        <div class="stat-label">Commits</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value">39</div>
-        <div class="stat-label">Releases</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value"><span class="accent">99</span>%</div>
-        <div class="stat-label">Rust</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- FOOTER -->
-<footer class="footer">
-  <div class="footer-inner">
-    <div class="footer-grid">
-      <div class="footer-brand">
-        <div class="footer-logo"><span>$</span> xh</div>
-        <p class="footer-desc">Showcase demo — a fictional concept site for xh, built by <a href="https://blok-web-studio.netlify.app" target="_blank" rel="noopener" style="color:var(--text);text-decoration:none;font-weight:600">BLOK.</a> WebDev Studio. Not affiliated with the xh project.</p>
-      </div>
-      <div>
-        <div class="footer-heading">Project</div>
-        <ul class="footer-links">
-          <li><a href="https://github.com/ducaale/xh" target="_blank" rel="noopener">GitHub</a></li>
-          <li><a href="https://crates.io/crates/xh" target="_blank" rel="noopener">crates.io</a></li>
-          <li><a href="https://github.com/ducaale/xh/releases" target="_blank" rel="noopener">Releases</a></li>
-        </ul>
-      </div>
-      <div>
-        <div class="footer-heading">BLOK.</div>
-        <ul class="footer-links">
-          <li><a href="https://blok-web-studio.netlify.app" target="_blank" rel="noopener">Portfolio</a></li>
-          <li><a href="https://www.fiverr.com/m_uvex" target="_blank" rel="noopener">Fiverr</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <span>Built by <a href="https://blok-web-studio.netlify.app" target="_blank" rel="noopener">BLOK. WebDev Studio</a></span>
-      <span>Fictional concept · Real design</span>
-    </div>
-  </div>
-</footer>
+<!-- BOTTOM PROMPT -->
+<div class="bottom-prompt">
+  <span class="prompt">$</span> <span class="cmd">_<span class="cursor"></span></span>
+</div>
 
 <script>
-// ─── HERO TERMINAL ANIMATION ───
-(function() {
-  const tl1 = document.getElementById('tl1');
-  const tl2 = document.getElementById('tl2');
-  const tl3 = document.getElementById('tl3');
-  if (!tl1 || !tl2 || !tl3) return;
+// ─── TERMINAL SESSION DATA ───
+// Each entry: type 'cmd' | 'res' | 'art' | 'html' | 'spacer'
+const session = [
+  // ── Scene 1: Landing ──
+  { type:'cmd', text:'xh' },
+  { type:'art' },
+  { type:'spacer' },
 
-  const typeLines = () => {
-    setTimeout(() => { tl1.style.opacity = '1'; }, 400);
-    setTimeout(() => {
-      tl2.style.opacity = '1';
-      // animate line by line stagger
-      const lines = tl2.querySelectorAll('.term-output');
-      if (lines.length) {
-        lines[0].style.opacity = '1';
-      }
-    }, 1600);
-    setTimeout(() => { tl3.style.opacity = '1'; }, 3200);
-  };
+  { type:'cmd', text:'xh GET https://api.github.com/repos/ducaale/xh' },
+  { type:'res', text:_j({
+    "name":"xh",
+    "description":"A friendly HTTP client for the terminal",
+    "stars":7936,
+    "language":"Rust",
+    "license":"MIT",
+    "downloads":"2.4M+"
+  })},
+  { type:'spacer' },
 
-  // Wait for load then animate hero terminal
-  if (document.readyState === 'complete') {
-    setTimeout(typeLines, 600);
-  } else {
-    window.addEventListener('load', () => setTimeout(typeLines, 600));
-  }
-})();
+  // ── Scene 2: Features ──
+  { type:'cmd', text:'xh --features' },
+  { type:'html', id:'features' },
+  { type:'spacer' },
 
-// ─── SCROLL ANIMATIONS ───
-(function() {
-  if (!('IntersectionObserver' in window)) return;
+  // ── Scene 3: POST demo ──
+  { type:'cmd', text:'xh POST https://api.example.com/data name=xh type=tool' },
+  { type:'res', text:_j({
+    "id":"req_abc123",
+    "name":"xh",
+    "type":"tool",
+    "created":"2024-06-15T10:30:00Z",
+    "status":"active"
+  })},
+  { type:'spacer' },
 
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.style.opacity = '1';
-        entry.target.style.transform = 'translateY(0)';
-      }
-    });
-  }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+  // ── Scene 4: Sessions ──
+  { type:'cmd', text:'xh --session work GET https://api.internal.io/status' },
+  { type:'res', text:_h(
+    'HTTP/2.0 200 OK',
+    'content-type: application/json',
+    'x-session-id: work-abc123',
+    '',
+    _o('{') +
+    '  '+_k('"status"')+': '+_s('"authenticated"')+',' +
+    '  '+_k('"cookie"')+': '+_s('"persisted"')+',' +
+    '  '+_k('"expires"')+': '+_s('"session persists across requests"') +
+    _o('}')
+  )},
+  { type:'spacer' },
 
-  // Target all feature cards, compare cards, stat cards, install cards
-  document.querySelectorAll('.feature-card, .compare-card, .stat-card, .install-card').forEach(el => {
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(20px)';
-    el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-    observer.observe(el);
-  });
-})();
+  // ── Scene 5: Auth ──
+  { type:'cmd', text:'xh GET https://api.example.com/admin Authorization:"Bearer $TOKEN"' },
+  { type:'res', text:_h(
+    'HTTP/2.0 200 OK',
+    'x-auth-scope: admin',
+    '',
+    _o('{') +
+    '  '+_k('"user"')+': '+_s('"admin"')+',' +
+    '  '+_k('"permissions"')+': '+_s('"[read, write, delete]"') +
+    _o('}')
+  )},
+  { type:'spacer' },
 
-// ─── INSTALL COPY BUTTONS ───
-(function() {
-  document.querySelectorAll('.install-copy').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const cmd = btn.dataset.cmd;
-      if (!cmd) return;
-      try {
-        await navigator.clipboard.writeText(cmd);
-        btn.textContent = 'Copied!';
-        btn.classList.add('copied');
-        setTimeout(() => {
-          btn.textContent = 'Copy';
-          btn.classList.remove('copied');
-        }, 2000);
-      } catch { /* fallback */ }
-    });
-  });
-})();
+  // ── Scene 6: Curl vs xh ──
+  { type:'cmd', text:'xh --why' },
+  { type:'html', id:'compare' },
+  { type:'spacer' },
 
-// ─── PLAYGROUND ───
-(function() {
-  const input = document.getElementById('playgroundInput');
-  const output = document.getElementById('playgroundOutput');
-  const runBtn = document.getElementById('playgroundRun');
-  const tabs = document.querySelectorAll('.playground-tab');
+  // ── Scene 7: Install ──
+  { type:'cmd', text:'brew install xh' },
+  { type:'html', id:'install' },
+  { type:'spacer' },
 
-  if (!input || !output || !runBtn) return;
+  // ── Scene 8: Stats ──
+  { type:'cmd', text:'xh --stats' },
+  { type:'html', id:'stats' },
+  { type:'spacer' },
+  { type:'spacer' },
 
-  // Demo presets
-  const demos = {
-    'users': {
-      cmd: 'xh GET https://api.example.com/users',
-      response: `HTTP/2.0 200 OK\x0aStatus: 200 OK\x0aContent-Type: application/json\x0a\x0a{\x0a  "users": [\x0a    {\x0a      "id": 1,\x0a      "name": "Alice",\x0a      "role": "admin"\x0a    },\x0a    {\x0a      "id": 2,\x0a      "name": "Bob",\x0a      "role": "editor"\x0a    },\x0a    {\x0a      "id": 3,\x0a      "name": "Carol",\x0a      "role": "viewer"\x0a    }\x0a  ],\x0a  "total": 3\x0a}`
-    },
-    'post': {
-      cmd: 'xh POST https://api.example.com/data name=xh type=tool',
-      response: `HTTP/2.0 201 Created\x0aStatus: 201 Created\x0aContent-Type: application/json\x0a\x0a{\x0a  "id": "req_abc123",\x0a  "name": "xh",\x0a  "type": "tool",\x0a  "created": "2024-06-15T10:30:00Z",\x0a  "status": "active"\x0a}`
-    },
-    'auth': {
-      cmd: 'xh GET https://api.example.com/admin Authorization:"Bearer $TOKEN"',
-      response: `HTTP/2.0 200 OK\x0aStatus: 200 OK\x0aContent-Type: application/json\x0aX-Auth-Scope: admin\x0a\x0a{\x0a  "session": "valid",\x0a  "user": "admin",\x0a  "permissions": [\x0a    "read",\x0a    "write",\x0a    "delete"\x0a  ],\x0a  "expires": "2024-07-15T10:30:00Z"\x0a}`
-    },
-    'headers': {
-      cmd: 'xh GET https://api.example.com/health',
-      response: `HTTP/2.0 200 OK\x0aStatus: 200 OK\x0aContent-Type: application/json\x0aCache-Control: no-cache\x0a\x0a{\x0a  "status": "healthy",\x0a  "uptime": "14d 6h 32m",\x0a  "version": "2.4.1",\x0a  "requests_served": 1427903\x0a}`
-    }
-  };
+  // ── Footer ──
+  { type:'cmd', text:'echo "built by BLOK."' },
+  { type:'html', id:'footer' },
+];
 
-  function syntaxHighlight(json) {
-    const lines = json.split('\n');
-    return lines.map(line => {
-      // Escape HTML first
-      const esc = line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      // HTTP status line
-      if (esc.startsWith('HTTP/') || esc.startsWith('Status:')) {
-        return `<span style="color:#22d3ee">${esc}</span>`;
-      }
-      // Headers (lines with colons that aren't JSON)
-      if (/^[A-Za-z-]+:/.test(esc) && !esc.trim().startsWith('"') && !esc.trim().startsWith('}') && !esc.trim().startsWith('{')) {
-        const [key, ...rest] = esc.split(':');
-        return `<span style="color:#60a5fa">${key}</span>:<span style="color:#a8a8b8">${rest.join(':')}</span>`;
-      }
-      // JSON highlighting
-      return esc
-        .replace(/"([^"]+)":/g, '<span class="syntax-key">"$1"</span>:')
-        .replace(/: "([^"]+)"/g, ': <span class="syntax-str">"$1"</span>')
-        .replace(/: (\d+)/g, ': <span class="syntax-num">$1</span>')
-        .replace(/: (true|false)/g, ': <span class="syntax-bool">$1</span>')
-        .replace(/: (null)/g, ': <span class="syntax-null">$1</span>');
-    }).join('\n');
-  }
-
-  function renderResponse(text) {
-    if (!text || text.trim() === '') {
-      output.innerHTML = '<div class="empty-state">▸ Type a command or click a preset above</div>';
-      return;
-    }
-    output.innerHTML = syntaxHighlight(text);
-  }
-
-  function runCommand(cmd) {
-    // Match against known demos
-    const cmdLower = cmd.toLowerCase().trim();
-    let responseData = null;
-
-    // Check if matches any demo
-    for (const [key, demo] of Object.entries(demos)) {
-      if (cmdLower.includes(demo.cmd.toLowerCase().split(' ').slice(1).join(' ').substring(0, 20))) {
-        responseData = demo.response;
-        break;
-      }
-    }
-
-    if (!responseData) {
-      // Generate a generic response
-      const method = cmdLower.includes('post') ? 'POST' : cmdLower.includes('put') ? 'PUT' : cmdLower.includes('delete') ? 'DELETE' : 'GET';
-      const hasAuth = cmdLower.includes('authorization') || cmdLower.includes('bearer');
-      const hasJson = cmdLower.includes('=');
-
-      let resp = `HTTP/2.0 ${method === 'POST' ? '201' : '200'} OK\nStatus: ${method === 'POST' ? '201' : '200'} ${method === 'POST' ? 'Created' : 'OK'}\nContent-Type: application/json\n`;
-      if (hasAuth) resp += 'X-Auth-Scope: authenticated\n';
-      resp += '\n{\n  "message": "Response from xh",\n  "method": "' + method + '",\n  "format": "auto-colourised",\n  "xh_version": "0.22.2"\n}';
-      responseData = resp;
-    }
-
-    renderResponse(responseData);
-  }
-
-  // Tab clicks
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      tabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      const demoKey = tab.dataset.demo;
-      const demo = demos[demoKey];
-      if (demo) {
-        input.value = demo.cmd;
-        renderResponse(demo.response);
-      }
-    });
-  });
-
-  // Run button
-  runBtn.addEventListener('click', () => {
-    const cmd = input.value.trim();
-    if (!cmd) return;
-    runCommand(cmd);
-  });
-
-  // Enter key
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      runBtn.click();
+// Helper: build JSON-like output for res lines
+function _j(obj) {
+  let out = _h('HTTP/2.0 200 OK','content-type: application/json','');
+  out += _o('{') + '\n';
+  const entries = Object.entries(obj);
+  entries.forEach(([k,v],i) => {
+    const comma = i < entries.length-1 ? ',' : '';
+    if (typeof v === 'string') {
+      out += '  '+_k('"'+k+'"')+': '+_s('"'+v+'"')+comma+'\n';
+    } else {
+      out += '  '+_k('"'+k+'"')+': '+_n(String(v))+comma+'\n';
     }
   });
+  out += _o('}');
+  return out;
+}
+function _h(...lines){return lines.map(l=>'<span class="h">'+esc(l)+'</span>').join('\n')+'\n'}
+function _k(s){return '<span class="k">'+esc(s)+'</span>'}
+function _s(s){return '<span class="s">'+esc(s)+'</span>'}
+function _n(s){return '<span class="n">'+esc(s)+'</span>'}
+function _b(s){return '<span class="b">'+esc(s)+'</span>'}
+function _o(s){return '<span class="o">'+esc(s)+'</span>'}
+function _x(s){return '<span class="x">'+esc(s)+'</span>'}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
-  // Set initial demo
-  if (demos['users']) {
-    input.value = demos['users'].cmd;
-    renderResponse(demos['users'].response);
+// HTML templates for feature, install, stats, footer
+const templates = {
+  features: `
+<div class="feat-grid">
+  <div class="feat-item"><span class="tag json">JSON</span><div class="name">Auto-formatting</div><div class="desc">Responses coloured & structured by default. No piping to jq.</div></div>
+  <div class="feat-item"><span class="tag auth">Auth</span><div class="name">Native auth</div><div class="desc">Bearer tokens, basic auth, API keys — inline, zero ceremony.</div></div>
+  <div class="feat-item"><span class="tag session">Sessions</span><div class="name">Persistent sessions</div><div class="desc">Auth once, reuse across requests. Cookies & headers persist.</div></div>
+  <div class="feat-item"><span class="tag pipe">Output</span><div class="name">Colourised output</div><div class="desc">Every type has its own colour. Headers cyan, keys blue, strings green.</div></div>
+  <div class="feat-item"><span class="tag dl">Downloads</span><div class="name">File download</div><div class="desc">Progress bars, resume, auto-filename. No extra tooling.</div></div>
+  <div class="feat-item"><span class="tag fast">Rust</span><div class="name">Blazing fast</div><div class="desc">Single static binary. No Node, no Python. Zero setup.</div></div>
+</div>`,
+
+  compare: `
+<div class="res" style="padding:8px 0 4px 0"><span class="h">Same request. Two experiences.</span></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 0 0 22px">
+<div style="background:var(--surface);border:1px solid rgba(239,68,68,0.2);border-radius:6px;overflow:hidden">
+<div style="background:rgba(239,68,68,0.08);padding:8px 12px;font-size:11px;color:var(--red);font-weight:500;border-bottom:1px solid rgba(239,68,68,0.2)">curl — 16 flags for JSON</div>
+<div style="padding:10px 12px;font-size:12px;color:var(--muted);line-height:1.7">
+curl -s -H "Accept: application/json" -H "Authorization: Bearer $TOKEN" -X POST https://api.example.com/data -d '{"name":"xh","type":"tool"}' | jq .<br>
+<span style="color:var(--dim)">// 37 seconds later... debugging flags</span>
+</div></div>
+<div style="background:var(--surface);border:1px solid rgba(74,222,128,0.2);border-radius:6px;overflow:hidden">
+<div style="background:rgba(74,222,128,0.08);padding:8px 12px;font-size:11px;color:var(--green);font-weight:500;border-bottom:1px solid rgba(74,222,128,0.2)">xh — 0 flags</div>
+<div style="padding:10px 12px;font-size:12px;color:var(--muted);line-height:1.7">
+xh POST https://api.example.com/data name=xh type=tool Authorization:"Bearer $TOKEN"<br>
+<span style="color:var(--green)">✓ HTTP/2.0 201 — readable. coloured. done.</span>
+</div></div>
+</div>`,
+
+  install: `
+<div class="install-block">
+  <div class="install-row">
+    <span class="label">macOS</span>
+    <span class="code">brew install xh</span>
+    <button class="copy-btn" data-cmd="brew install xh">Copy</button>
+  </div>
+  <div class="install-row">
+    <span class="label">Any</span>
+    <span class="code">cargo install xh</span>
+    <button class="copy-btn" data-cmd="cargo install xh">Copy</button>
+  </div>
+  <div class="install-row">
+    <span class="label">Linux</span>
+    <span class="code">snap install xh</span>
+    <button class="copy-btn" data-cmd="snap install xh">Copy</button>
+  </div>
+  <div class="install-row">
+    <span class="label">Nix</span>
+    <span class="code">nix-shell -p xh</span>
+    <button class="copy-btn" data-cmd="nix-shell -p xh">Copy</button>
+  </div>
+</div>`,
+
+  stats: `
+<div class="stats-row">
+  <div class="stat-cell"><div class="val">7.9<span class="o">k</span></div><div class="lbl">Stars</div></div>
+  <div class="stat-cell"><div class="val">1.8<span class="o">k</span></div><div class="lbl">Commits</div></div>
+  <div class="stat-cell"><div class="val">39</div><div class="lbl">Releases</div></div>
+  <div class="stat-cell"><div class="val">99<span class="o">%</span></div><div class="lbl">Rust</div></div>
+</div>`,
+
+  footer: `
+<div class="footer-line">
+  <span class="muted">Showcase demo for xh · Built by </span><a href="https://blok-web-studio.netlify.app" target="_blank" rel="noopener">BLOK. WebDev Studio</a>
+  <span class="muted"> · </span><a href="https://github.com/ducaale/xh" target="_blank" rel="noopener">GitHub</a>
+</div>`,
+};
+
+// ─── RENDER SESSION ───
+const container = document.getElementById('linesContainer');
+const termBody = document.getElementById('termBody');
+const lines = [];
+
+session.forEach((entry, idx) => {
+  const el = document.createElement('div');
+  el.className = 'line';
+  el.dataset.idx = idx;
+
+  if (entry.type === 'cmd') {
+    el.innerHTML = '<span class="prompt">$ </span><span class="cmd">' + esc(entry.text) + '</span>';
+  } else if (entry.type === 'res') {
+    el.className = 'line res';
+    // Split by \n and wrap each line for syntax highlighting
+    el.innerHTML = entry.text;
+  } else if (entry.type === 'art') {
+    el.className = 'line';
+    el.innerHTML = `<div class="logo-art">  __  _  __   __  __  __  __  __  __
+ / _\\/ |/ /  /__\\/ / / / / / / / / /
+/ /  |   /  \\/.,\\/ / / / / / / / / /
+\\/   |__\\   \\_/\\_\\/_/_/_/_/_/_/_/_/</div>`;
+  } else if (entry.type === 'html') {
+    el.className = 'line';
+    el.innerHTML = templates[entry.id] || '';
+  } else if (entry.type === 'spacer') {
+    el.className = 'line';
+    el.style.height = '12px'; el.style.opacity = '1'; el.style.transform = 'none';
   }
-})();
+
+  container.appendChild(el);
+  lines.push(el);
+});
+
+// ─── SCROLL-REVEAL (typewriter-style) ───
+function isVisible(el) {
+  if (!el) return false;
+  const rect = el.getBoundingClientRect();
+  const threshold = window.innerHeight * 0.78;
+  return rect.top < threshold;
+}
+
+let revealedCount = 0;
+function revealLines() {
+  for (let i = revealedCount; i < lines.length; i++) {
+    const el = lines[i];
+    if (!el || el.dataset.idx === undefined) continue;
+    if (isVisible(el)) {
+      el.classList.add('show');
+      revealedCount = i + 1;
+    } else {
+      break;
+    }
+  }
+}
+
+termBody.addEventListener('scroll', revealLines, { passive: true });
+window.addEventListener('resize', revealLines, { passive: true });
+
+// Initial reveal after a moment
+setTimeout(revealLines, 200);
+setTimeout(revealLines, 600);
+
+// ─── TYPEWRITER EFFECT FOR COMMANDS ───
+// After a command line is revealed, type its text character by character
+let typingTimeout = null;
+function watchTyping() {
+  const cmds = container.querySelectorAll('.line.cmd, .line:not(.res):not(.spacer)');
+  // Actually we track typing by detecting newly shown lines
+  const shown = container.querySelectorAll('.line.show');
+  shown.forEach(el => {
+    if (el.dataset.typed) return;
+    const cmdSpan = el.querySelector('.cmd');
+    if (!cmdSpan) return;
+    const fullText = cmdSpan.textContent;
+    if (!fullText || fullText.length < 3) { el.dataset.typed = '1'; return; }
+
+    el.dataset.typed = '1';
+    // Clear and type
+    cmdSpan.textContent = '';
+    let ci = 0;
+    const typeInterval = setInterval(() => {
+      if (ci < fullText.length) {
+        cmdSpan.textContent += fullText[ci];
+        ci++;
+        // Auto-scroll to keep cursor in view
+        termBody.scrollTop = termBody.scrollHeight;
+      } else {
+        clearInterval(typeInterval);
+      }
+    }, 22);
+  });
+}
+
+// Override: instead of typing on scroll, we do a simpler staggered reveal
+// Let's make lines reveal with a slight delay cascade
+function cascadeReveal() {
+  for (let i = 0; i < lines.length; i++) {
+    const el = lines[i];
+    if (!el || el.classList.contains('show') || el.classList.contains('spacer')) continue;
+    if (isVisible(el)) {
+      // Show it with a delay based on distance from viewport top
+      const rect = el.getBoundingClientRect();
+      const delay = Math.max(0, (rect.top - 100) * 0.3);
+      setTimeout(() => {
+        el.classList.add('show');
+        // If it's a command line, type it out
+        const cmdSpan = el.querySelector('.cmd');
+        if (cmdSpan && !el.dataset.typed) {
+          const txt = cmdSpan.textContent;
+          cmdSpan.textContent = '';
+          el.dataset.typed = '1';
+          let ci = 0;
+          const ti = setInterval(() => {
+            if (ci < txt.length) {
+              cmdSpan.textContent += txt[ci];
+              ci++;
+            } else { clearInterval(ti); }
+          }, 18);
+        }
+      }, delay);
+    }
+  }
+}
+
+termBody.addEventListener('scroll', cascadeReveal, { passive: true });
+window.addEventListener('resize', cascadeReveal, { passive: true });
+setTimeout(cascadeReveal, 100);
+setTimeout(cascadeReveal, 500);
+
+// ─── COPY BUTTONS ───
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.copy-btn');
+  if (!btn) return;
+  const cmd = btn.dataset.cmd;
+  if (!cmd) return;
+  try {
+    await navigator.clipboard.writeText(cmd);
+    btn.textContent = '✓';
+    btn.classList.add('ok');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('ok'); }, 1800);
+  } catch {}
+});
 
 // ─── HERO TERMINAL MOUSE TILT ───
 (function() {
-  const terminal = document.getElementById('heroTerminal');
-  if (!terminal) return;
+  const frame = document.getElementById('termFrame');
+  if (!frame) return;
   const isMobile = window.matchMedia('(pointer: coarse)').matches;
   if (isMobile) return;
 
   let mx = 0, my = 0;
   let rotX = 0, rotY = 0;
-  const maxAngle = 2.4;
-  const lerpSpeed = 0.045;
+  const maxAngle = 1.6;
+  const lerpSpeed = 0.04;
   let rafId = null;
 
   window.addEventListener('mousemove', (e) => {
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    mx = ((e.clientX / vw) - 0.5) * 2;
-    my = ((e.clientY / vh) - 0.5) * 2;
+    mx = ((e.clientX / window.innerWidth) - 0.5) * 2;
+    my = ((e.clientY / window.innerHeight) - 0.5) * 2;
   }, { passive: true });
 
   function tick() {
-    const targetY = mx * maxAngle;
-    const targetX = -my * maxAngle;
-    rotY += (targetY - rotY) * lerpSpeed;
-    rotX += (targetX - rotX) * lerpSpeed;
-    terminal.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+    rotY += ((mx * maxAngle) - rotY) * lerpSpeed;
+    rotX += ((-my * maxAngle) - rotX) * lerpSpeed;
+    const s = 1 - (Math.abs(rotX) + Math.abs(rotY)) * 0.003;
+    frame.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg) scale(${s})`;
     rafId = requestAnimationFrame(tick);
   }
 
-  const observer = new IntersectionObserver((entries) => {
+  const obs = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
-      if (entry.isIntersecting && !rafId) {
-        tick();
-      } else if (!entry.isIntersecting && rafId) {
-        cancelAnimationFrame(rafId);
-        rafId = null;
-        terminal.style.transform = 'rotateX(0deg) rotateY(0deg)';
-        rotX = 0; rotY = 0;
+      if (entry.isIntersecting && !rafId) tick();
+      else if (!entry.isIntersecting && rafId) {
+        cancelAnimationFrame(rafId); rafId = null;
+        frame.style.transform = ''; rotX = 0; rotY = 0;
       }
     });
   }, { threshold: 0 });
-  observer.observe(terminal);
-})();
-
-// ─── NAV HIDE/SHOW ON SCROLL ───
-(function() {
-  let lastScroll = 0;
-  const nav = document.querySelector('.nav');
-  window.addEventListener('scroll', () => {
-    const currentScroll = window.pageYOffset;
-    if (currentScroll > lastScroll && currentScroll > 80) {
-      nav.style.transform = 'translateY(-100%)';
-    } else {
-      nav.style.transform = 'translateY(0)';
-    }
-    nav.style.transition = 'transform 0.3s ease';
-    lastScroll = currentScroll;
-  }, { passive: true });
+  obs.observe(frame);
 })();
 </script>
 </body>
