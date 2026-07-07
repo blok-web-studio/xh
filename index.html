@@ -146,6 +146,9 @@ section { position: relative; padding: 100px 24px; }
   background: var(--term-bg); border: 1px solid var(--term-border);
   border-radius: var(--radius-lg); overflow: hidden;
   box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+  transform-style: preserve-3d;
+  perspective: 800px;
+  transition: box-shadow 0.3s ease;
 }
 .term-header {
   display: flex; align-items: center; gap: 8px;
@@ -835,6 +838,50 @@ section { position: relative; padding: 100px 24px; }
     input.value = demos['users'].cmd;
     renderResponse(demos['users'].response);
   }
+})();
+
+// ─── HERO TERMINAL MOUSE TILT ───
+(function() {
+  const terminal = document.getElementById('heroTerminal');
+  if (!terminal) return;
+  const isMobile = window.matchMedia('(pointer: coarse)').matches;
+  if (isMobile) return;
+
+  let mx = 0, my = 0;
+  let rotX = 0, rotY = 0;
+  const maxAngle = 2.4;
+  const lerpSpeed = 0.045;
+  let rafId = null;
+
+  window.addEventListener('mousemove', (e) => {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    mx = ((e.clientX / vw) - 0.5) * 2;
+    my = ((e.clientY / vh) - 0.5) * 2;
+  }, { passive: true });
+
+  function tick() {
+    const targetY = mx * maxAngle;
+    const targetX = -my * maxAngle;
+    rotY += (targetY - rotY) * lerpSpeed;
+    rotX += (targetX - rotX) * lerpSpeed;
+    terminal.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+    rafId = requestAnimationFrame(tick);
+  }
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && !rafId) {
+        tick();
+      } else if (!entry.isIntersecting && rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+        terminal.style.transform = 'rotateX(0deg) rotateY(0deg)';
+        rotX = 0; rotY = 0;
+      }
+    });
+  }, { threshold: 0 });
+  observer.observe(terminal);
 })();
 
 // ─── NAV HIDE/SHOW ON SCROLL ───
