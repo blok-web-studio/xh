@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>xh — HTTP, made human</title>
-<meta name="description" content="xh is a friendly, fast HTTP client for the terminal. Written in Rust. JSON by default, colourised output, sessions, and zero-config setup.">
+<title>xh</title>
+<meta name="description" content="xh is a CLI HTTP client. Colourised output. JSON by default. Auth, sessions, downloads. Written in Rust.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23ff6b35'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='monospace' font-size='18' fill='white'%3Exh%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,495 +12,409 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#08080c;
-  --surface:#0f0f16;
-  --border:#1c1c28;
-  --border-hover:#2a2a3e;
-  --text:#e6e6ee;
+  --bg:#0a0a0e;
+  --card:#111116;
+  --border:#1e1e2c;
+  --text:#e4e4ee;
   --muted:#6a6a82;
   --dim:#3a3a4e;
   --orange:#ff6b35;
-  --orange-glow:rgba(255,107,53,0.12);
   --green:#4ade80;
   --blue:#60a5fa;
   --pink:#f472b6;
-  --yellow:#fbbf24;
   --cyan:#22d3ee;
+  --yellow:#fbbf24;
   --red:#ef4444;
-  --font-sans:'Inter',system-ui,sans-serif;
-  --font-mono:'JetBrains Mono','SF Mono',monospace;
+  --mono:'JetBrains Mono','SF Mono',monospace;
+  --sans:'Inter',system-ui,sans-serif;
 }
-html{scroll-behavior:smooth}
 body{
   background:var(--bg);color:var(--text);
-  font-family:var(--font-sans);-webkit-font-smoothing:antialiased;
-  line-height:1.6;overflow-x:hidden;
+  font-family:var(--sans);-webkit-font-smoothing:antialiased;
+  line-height:1.65;
 }
 ::selection{background:var(--orange);color:#fff}
 
 /* ─── LAYOUT ─── */
-.wrap{max-width:960px;margin:0 auto;padding:0 24px}
+.page{max-width:780px;margin:0 auto;padding:48px 28px 64px}
 
-/* ─── NAV ─── */
-nav{
+/* ─── HEADER ─── */
+header{
   display:flex;align-items:center;justify-content:space-between;
-  padding:16px 0;border-bottom:1px solid var(--border);margin-bottom:80px;
+  margin-bottom:64px;
 }
-.logo{font-family:var(--font-mono);font-weight:700;font-size:1rem;text-decoration:none;color:var(--text)}
-.logo span{color:var(--orange)}
-nav a{text-decoration:none;transition:color 0.2s}
-nav .lnk{color:var(--muted);font-size:0.85rem;font-weight:500;margin-left:24px}
-nav .lnk:hover{color:var(--text)}
-nav .gh{
-  margin-left:24px;display:inline-flex;align-items:center;gap:5px;
-  padding:6px 12px;border:1px solid var(--border);border-radius:6px;
-  color:var(--muted);font-size:0.8rem;font-weight:500;transition:all 0.2s;
+header .l{font-family:var(--mono);font-weight:700;font-size:1rem;color:var(--text);text-decoration:none}
+header .l span{color:var(--orange)}
+header a{text-decoration:none}
+header .gh{
+  font-size:0.82rem;color:var(--muted);font-weight:500;
+  padding:6px 14px;border:1px solid var(--border);border-radius:6px;transition:all 0.2s;
 }
-nav .gh:hover{border-color:var(--border-hover);color:var(--text)}
+header .gh:hover{border-color:var(--dim);color:var(--text)}
 
-/* ─── HERO ─── */
-.hero{margin-bottom:100px}
-.hero .tag{
-  display:inline-flex;align-items:center;gap:5px;
-  padding:3px 10px;background:var(--orange-glow);border:1px solid rgba(255,107,53,0.2);
-  border-radius:999px;font-size:0.72rem;font-weight:600;color:var(--orange);
-  margin-bottom:20px;font-family:var(--font-mono);
+/* ─── REQUEST BLOCK ─── */
+.req{margin-bottom:48px}
+.req-hr{
+  border:none;height:1px;background:var(--border);margin:12px 0 20px;
 }
-.hero h1{
-  font-size:clamp(2.2rem,6vw,4rem);font-weight:700;
-  line-height:1.05;letter-spacing:-0.035em;margin-bottom:16px;max-width:700px;
+.req-cmd{
+  font-family:var(--mono);font-size:0.82rem;color:var(--green);
+  display:flex;align-items:baseline;gap:6px;
 }
-.hero h1 .accent{color:var(--orange)}
-.hero p{
-  font-size:1.05rem;color:var(--muted);max-width:480px;line-height:1.7;margin-bottom:32px;
-}
-.hero .btns{display:flex;gap:12px;flex-wrap:wrap}
-.btn{
-  display:inline-flex;align-items:center;gap:7px;
-  padding:11px 22px;border-radius:8px;font-size:0.88rem;
-  font-weight:600;text-decoration:none;cursor:pointer;transition:all 0.2s;
-  font-family:var(--font-sans);border:none;
-}
-.btn-primary{background:var(--orange);color:#fff}
-.btn-primary:hover{box-shadow:0 6px 24px var(--orange-glow);transform:translateY(-1px)}
-.btn-ghost{background:var(--surface);border:1px solid var(--border);color:var(--text)}
-.btn-ghost:hover{background:var(--border);border-color:var(--border-hover)}
+.req-cmd .prompt{color:var(--dim);user-select:none}
+.req-cmd .url{color:var(--muted);font-weight:400}
+.req-cmd .url .h{color:var(--cyan)}
+.req-cmd .brand{color:var(--orange);font-weight:500}
 
-/* ─── CODE BLOCK (used throughout) ─── */
-.code-block{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:10px;overflow:hidden;
+/* ─── CONTENT TYPES ─── */
+.resp{font-size:0.95rem;line-height:1.7;color:var(--muted)}
+.resp h1{
+  font-family:var(--sans);font-size:clamp(1.6rem,4vw,2.6rem);font-weight:700;
+  color:var(--text);line-height:1.1;letter-spacing:-0.035em;margin:0 0 12px;
 }
-.code-block .bar{
-  display:flex;align-items:center;gap:6px;
-  padding:10px 14px;background:rgba(255,255,255,0.02);
-  border-bottom:1px solid var(--border);font-family:var(--font-mono);font-size:0.7rem;color:var(--dim);
+.resp h1 .o{color:var(--orange)}
+.resp p{margin-bottom:12px;max-width:560px}
+.resp .btns{margin-top:20px;display:flex;gap:10px}
+.resp .btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:10px 20px;border-radius:7px;font-size:0.85rem;
+  font-weight:600;text-decoration:none;transition:all 0.2s;font-family:var(--sans);
 }
-.code-block .bar .d{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.code-block .bar .d1{background:#ff5f57}
-.code-block .bar .d2{background:#ffbd2e}
-.code-block .bar .d3{background:#28c840}
-.code-block pre{
-  padding:18px 20px;font-family:var(--font-mono);font-size:0.82rem;
-  line-height:1.8;overflow-x:auto;color:var(--muted);white-space:pre;
-}
-.code-block pre .g{color:var(--green)}
-.code-block pre .b{color:var(--blue)}
-.code-block pre .o{color:var(--orange)}
-.code-block pre .p{color:var(--pink)}
-.code-block pre .y{color:var(--yellow)}
-.code-block pre .c{color:var(--cyan)}
-.code-block pre .d{color:var(--dim)}
+.resp .btn.prim{background:var(--orange);color:#fff}
+.resp .btn.prim:hover{box-shadow:0 4px 20px rgba(255,107,53,0.2)}
+.resp .btn.sec{background:var(--card);border:1px solid var(--border);color:var(--text)}
+.resp .btn.sec:hover{background:var(--border)}
 
-/* ─── HERO BLOCK (the thing) ─── */
-.hero-block{
-  margin-top:48px;
-  transform-style:preserve-3d;perspective:900px;
-  transition:box-shadow 0.3s;
+/* ─── JSON OUTPUT (inline, not in a box) ─── */
+.resp .json{
+  font-family:var(--mono);font-size:0.82rem;line-height:1.8;
+  color:var(--muted);margin:8px 0 0;
 }
-.hero-block .code-block{box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+.resp .json .k{color:var(--blue)}
+.resp .json .s{color:var(--green)}
+.resp .json .n{color:var(--pink)}
+.resp .json .b{color:var(--yellow)}
+.resp .json .x{color:var(--dim);font-style:italic}
 
-/* ─── SECTION ─── */
-section{padding:80px 0}
-section:nth-child(odd){background:var(--surface)}
-.section-head{margin-bottom:40px}
-.section-head .num{
-  font-family:var(--font-mono);font-size:0.7rem;color:var(--orange);
-  letter-spacing:0.08em;margin-bottom:6px;display:flex;align-items:center;gap:8px;
-}
-.section-head .num::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--orange);flex-shrink:0}
-.section-head h2{
-  font-size:clamp(1.3rem,2.5vw,1.8rem);font-weight:700;letter-spacing:-0.03em;margin-bottom:8px;
-}
-.section-head p{color:var(--muted);font-size:0.9rem;max-width:440px}
+/* ─── COMPARE ─── */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:8px 0}
+.c-card{border-radius:8px;overflow:hidden;border:1px solid var(--border);font-family:var(--mono);font-size:0.78rem;line-height:1.7}
+.c-card .top{padding:8px 14px;font-size:0.72rem;font-weight:500;border-bottom:1px solid var(--border)}
+.c-card .body{padding:12px 14px;color:var(--muted);overflow-x:auto}
+.c-card.bad .top{color:var(--red);background:rgba(239,68,68,0.04)}
+.c-card.good .top{color:var(--green);background:rgba(74,222,128,0.04)}
+.c-card.bad{border-color:rgba(239,68,68,0.12)}
+.c-card.good{border-color:rgba(74,222,128,0.12)}
 
-/* ─── COMPARE GRID ─── */
-.compare{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.compare-card{
-  border-radius:10px;overflow:hidden;border:1px solid var(--border);
+/* ─── FEATURE LIST ─── */
+.flist{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin:4px 0}
+.flist .f{
+  background:var(--card);border:1px solid var(--border);border-radius:7px;
+  padding:16px 18px;font-family:var(--sans);
 }
-.compare-card .top{
-  padding:10px 16px;font-family:var(--font-mono);font-size:0.78rem;font-weight:500;
-  border-bottom:1px solid var(--border);
+.flist .f .tag{
+  display:inline-block;padding:1px 7px;border-radius:3px;
+  font-family:var(--mono);font-size:0.65rem;font-weight:600;
+  letter-spacing:0.04em;margin-bottom:6px;text-transform:uppercase;
 }
-.compare-card.bad .top{background:rgba(239,68,68,0.05);color:var(--red)}
-.compare-card.good .top{background:rgba(74,222,128,0.05);color:var(--green)}
-.compare-card .body{padding:16px;font-family:var(--font-mono);font-size:0.78rem;line-height:1.7;color:var(--muted);overflow-x:auto}
-.compare-card .body .ok{color:var(--green)}
-.compare-card .body .no{color:var(--red)}
-.compare-card.bad{border-color:rgba(239,68,68,0.15)}
-.compare-card.good{border-color:rgba(74,222,128,0.15)}
-
-/* ─── FEATURES ─── */
-.feats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-.feat{
-  background:var(--bg);border:1px solid var(--border);border-radius:8px;
-  padding:18px 20px;transition:border-color 0.2s;
-}
-.feat:hover{border-color:var(--border-hover)}
-.feat .icon{font-size:1.1rem;margin-bottom:8px}
-.feat h3{font-size:0.85rem;font-weight:600;margin-bottom:4px}
-.feat p{font-size:0.78rem;color:var(--muted);line-height:1.6}
-
-/* ─── PLAYGROUND ─── */
-.playground-box{
-  background:var(--bg);border:1px solid var(--border);border-radius:10px;overflow:hidden;
-}
-.playground-box .tabs{display:flex;border-bottom:1px solid var(--border)}
-.playground-box .tabs .tab{
-  padding:10px 18px;font-family:var(--font-mono);font-size:0.75rem;
-  color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;
-  transition:all 0.15s;user-select:none;
-}
-.playground-box .tabs .tab:hover{color:var(--text)}
-.playground-box .tabs .tab.active{color:var(--orange);border-bottom-color:var(--orange)}
-.playground-box .input-row{
-  display:flex;align-items:center;gap:0;
-  padding:10px 16px;border-bottom:1px solid var(--border);
-  font-family:var(--font-mono);font-size:0.82rem;
-}
-.playground-box .input-row .prompt{color:var(--green);margin-right:10px;user-select:none}
-.playground-box .input-row input{
-  flex:1;background:transparent;border:none;outline:none;
-  color:var(--text);font-family:var(--font-mono);font-size:0.82rem;caret-color:var(--green);
-}
-.playground-box .input-row input::placeholder{color:var(--dim)}
-.playground-box .input-row .run{
-  padding:5px 14px;background:var(--orange);color:#fff;border:none;border-radius:5px;
-  font-size:0.72rem;font-weight:600;cursor:pointer;font-family:var(--font-sans);transition:all 0.15s;
-}
-.playground-box .input-row .run:hover{box-shadow:0 4px 16px var(--orange-glow)}
-.playground-box .output{
-  padding:16px 20px;font-family:var(--font-mono);font-size:0.8rem;
-  line-height:1.7;min-height:140px;max-height:340px;overflow-y:auto;white-space:pre-wrap;
-}
-.playground-box .output .empty{color:var(--dim);text-align:center;padding:30px 0}
-.playground-box .output .s-k{color:var(--blue)}
-.playground-box .output .s-s{color:var(--green)}
-.playground-box .output .s-n{color:var(--pink)}
-.playground-box .output .s-b{color:var(--yellow)}
-.playground-box .output .s-x{color:var(--dim);font-style:italic}
-.playground-box .output .s-h{color:var(--cyan)}
+.flist .f .tag.json{background:rgba(96,165,250,0.1);color:var(--blue)}
+.flist .f .tag.auth{background:rgba(74,222,128,0.1);color:var(--green)}
+.flist .f .tag.ssn{background:rgba(251,191,36,0.1);color:var(--yellow)}
+.flist .f .tag.clr{background:rgba(244,114,182,0.1);color:var(--pink)}
+.flist .f .tag.dl{background:rgba(34,211,238,0.1);color:var(--cyan)}
+.flist .f .tag.spd{background:rgba(255,107,53,0.1);color:var(--orange)}
+.flist .f .nm{font-size:0.85rem;font-weight:600;color:var(--text);margin-bottom:2px}
+.flist .f .dsc{font-size:0.78rem;color:var(--muted);line-height:1.5}
 
 /* ─── INSTALL ─── */
-.install-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.install-row{
-  display:flex;align-items:center;justify-content:space-between;gap:12px;
-  background:var(--bg);border:1px solid var(--border);border-radius:8px;
-  padding:12px 16px;transition:border-color 0.2s;
+.istack{display:flex;flex-direction:column;gap:6px;margin:4px 0}
+.istack .ir{
+  display:flex;align-items:center;gap:12px;
+  background:var(--card);border:1px solid var(--border);border-radius:7px;
+  padding:10px 16px;font-family:var(--mono);font-size:0.78rem;
 }
-.install-row:hover{border-color:var(--border-hover)}
-.install-row .lbl{font-size:0.7rem;color:var(--dim);font-weight:500;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px}
-.install-row .cmd{font-family:var(--font-mono);font-size:0.82rem;color:var(--text)}
-.install-row button{
+.istack .ir .lb{color:var(--dim);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.06em;min-width:44px}
+.istack .ir .cd{color:var(--text);flex:1}
+.istack .ir button{
   padding:4px 10px;background:transparent;border:1px solid var(--border);border-radius:5px;
-  color:var(--muted);font-size:0.72rem;cursor:pointer;font-family:var(--font-sans);
+  color:var(--muted);font-size:0.7rem;cursor:pointer;font-family:var(--sans);
   transition:all 0.15s;white-space:nowrap;
 }
-.install-row button:hover{background:var(--surface);border-color:var(--border-hover);color:var(--text)}
-.install-row button.ok{background:rgba(74,222,128,0.1);border-color:var(--green);color:var(--green)}
+.istack .ir button:hover{background:var(--card);border-color:var(--dim);color:var(--text)}
+.istack .ir button.ok{background:rgba(74,222,128,0.1);border-color:var(--green);color:var(--green)}
 
 /* ─── STATS ─── */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.stat{
-  background:var(--surface);border:1px solid var(--border);border-radius:8px;
-  padding:24px 16px;text-align:center;
+.srow{display:flex;gap:8px;margin:4px 0}
+.srow .s{
+  flex:1;background:var(--card);border:1px solid var(--border);border-radius:7px;
+  padding:16px 12px;text-align:center;
 }
-.stat .v{font-family:var(--font-mono);font-size:1.6rem;font-weight:600;color:var(--text)}
-.stat .v .o{color:var(--orange)}
-.stat .l{font-size:0.75rem;color:var(--muted);margin-top:2px}
+.srow .s .v{font-family:var(--mono);font-size:1.3rem;font-weight:500;color:var(--text)}
+.srow .s .v .o{color:var(--orange)}
+.srow .s .l{font-size:0.7rem;color:var(--dim);margin-top:2px;text-transform:uppercase;letter-spacing:0.06em}
+
+/* ─── PLAYGROUND ─── */
+.pbox{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--card);margin:4px 0}
+.pbox .tabs{display:flex;border-bottom:1px solid var(--border);overflow-x:auto}
+.pbox .tabs .tab{
+  padding:9px 16px;font-family:var(--mono);font-size:0.72rem;
+  color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;
+  transition:all 0.15s;user-select:none;white-space:nowrap;
+}
+.pbox .tabs .tab:hover{color:var(--text)}
+.pbox .tabs .tab.on{color:var(--orange);border-bottom-color:var(--orange)}
+.pbox .ir{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 14px;border-bottom:1px solid var(--border);
+  font-family:var(--mono);font-size:0.78rem;
+}
+.pbox .ir .p{color:var(--green);user-select:none}
+.pbox .ir input{
+  flex:1;background:transparent;border:none;outline:none;
+  color:var(--text);font-family:var(--mono);font-size:0.78rem;caret-color:var(--green);
+}
+.pbox .ir input::placeholder{color:var(--dim)}
+.pbox .ir .go{
+  padding:5px 12px;background:var(--orange);color:#fff;border:none;border-radius:4px;
+  font-size:0.7rem;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all 0.15s;
+}
+.pbox .ir .go:hover{box-shadow:0 3px 12px rgba(255,107,53,0.25)}
+.pbox .out{
+  padding:14px 18px;font-family:var(--mono);font-size:0.78rem;
+  line-height:1.7;min-height:120px;max-height:300px;overflow-y:auto;white-space:pre-wrap;
+}
+.pbox .out .empty{color:var(--dim);text-align:center;padding:24px 0}
+.pbox .out .k{color:var(--blue)}
+.pbox .out .s{color:var(--green)}
+.pbox .out .n{color:var(--pink)}
+.pbox .out .b{color:var(--yellow)}
+.pbox .out .h{color:var(--cyan)}
 
 /* ─── FOOTER ─── */
-footer{padding:40px 0 48px;border-top:1px solid var(--border)}
-footer .flex{display:flex;justify-content:space-between;align-items:center;gap:16px}
-footer .muted{color:var(--dim);font-size:0.8rem}
-footer a{color:var(--muted);text-decoration:none;transition:color 0.2s}
+footer{border-top:1px solid var(--border);padding:20px 0;margin-top:64px}
+footer .inner{
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:0.78rem;color:var(--dim);
+}
+footer a{color:var(--muted);text-decoration:none;transition:color 0.15s}
 footer a:hover{color:var(--orange)}
 
 /* ─── RESPONSIVE ─── */
-@media(max-width:700px){
-  .hero h1{font-size:clamp(1.6rem,7vw,2.4rem)}
+@media(max-width:650px){
+  .page{padding:28px 18px 40px}
+  header{margin-bottom:40px}
+  .req{margin-bottom:36px}
   .compare{grid-template-columns:1fr}
-  .feats{grid-template-columns:1fr}
-  .install-grid{grid-template-columns:1fr}
-  .stats{grid-template-columns:1fr 1fr}
-  nav{margin-bottom:48px}
-  .hero{margin-bottom:64px}
-  section{padding:48px 0}
-  nav .lnk{display:none}
-}
-@media(max-width:450px){
-  .stats{grid-template-columns:1fr 1fr}
-  .stat{padding:16px 12px}
-  .stat .v{font-size:1.2rem}
-  .hero-block{margin-top:32px}
+  .flist{grid-template-columns:1fr}
+  .srow{flex-wrap:wrap}
+  .srow .s{min-width:45%}
 }
 </style>
 </head>
 <body>
 
-<nav class="wrap">
-  <a href="#" class="logo"><span>$</span> xh</a>
-  <div>
-    <a href="#features" class="lnk">Features</a>
-    <a href="#playground" class="lnk">Playground</a>
-    <a href="#install" class="lnk">Install</a>
+<div class="page">
+
+  <!-- HEADER -->
+  <header>
+    <a href="#" class="l"><span>$</span> xh</a>
     <a href="https://github.com/ducaale/xh" target="_blank" rel="noopener" class="gh">GitHub</a>
-  </div>
-</nav>
+  </header>
 
-<!-- ─── HERO ─── -->
-<div class="wrap hero">
-  <div class="tag">7.9k stars · Rust · MIT</div>
-  <h1>HTTP requests,<br><span class="accent">minus the noise</span></h1>
-  <p>xh is a friendly HTTP client that formats responses, handles auth, persists sessions, and doesn't make you fight flags.</p>
-  <div class="btns">
-    <a href="#install" class="btn btn-primary">Install</a>
-    <a href="#playground" class="btn btn-ghost">Try it</a>
-  </div>
-
-  <div class="hero-block" id="heroBlock">
-    <div class="code-block">
-      <div class="bar"><span class="d d1"></span><span class="d d2"></span><span class="d d3"></span> xh</div>
-      <pre><span class="g">$</span> xh GET https://api.github.com/repos/ducaale/xh
-
-<span class="c">HTTP/2.0 200 OK</span>
-<span class="b">content-type</span>: application/json
-
-{
-  <span class="b">"name"</span>: <span class="g">"xh"</span>,
-  <span class="b">"stars"</span>: <span class="p">7936</span>,
-  <span class="b">"description"</span>: <span class="g">"A friendly, fast HTTP client"</span>,
-  <span class="b">"language"</span>: <span class="g">"Rust"</span>,
-  <span class="b">"license"</span>: <span class="g">"MIT"</span>
-}</pre>
+  <!-- ─── 1. INTRO ─── -->
+  <div class="req">
+    <div class="req-cmd">
+      <span class="prompt">$</span>
+      <span class="brand">xh</span>
+      <span class="url"><span class="h">get</span> /</span>
+    </div>
+    <hr class="req-hr">
+    <div class="resp">
+      <h1>HTTP requests,<br><span class="o">minus the noise</span></h1>
+      <p>xh is a CLI HTTP client that formats responses, handles auth, persists sessions, and doesn't make you memorise flags. Written in Rust. One binary. Zero setup.</p>
+      <div class="btns">
+        <a class="btn prim" href="#install">Get started</a>
+        <a class="btn sec" href="#play">Try online</a>
+      </div>
+      <div class="json" style="margin-top:20px">
+        {<br>
+        &nbsp;&nbsp;<span class="k">"name"</span>: <span class="s">"xh"</span>,<br>
+        &nbsp;&nbsp;<span class="k">"stars"</span>: <span class="n">7936</span>,<br>
+        &nbsp;&nbsp;<span class="k">"language"</span>: <span class="s">"Rust"</span>,<br>
+        &nbsp;&nbsp;<span class="k">"license"</span>: <span class="s">"MIT"</span><br>
+        }
+      </div>
     </div>
   </div>
+
+  <!-- ─── 2. FEATURES ─── -->
+  <div class="req">
+    <div class="req-cmd">
+      <span class="prompt">$</span>
+      <span class="brand">xh</span>
+      <span class="url"><span class="h">get</span> /features</span>
+    </div>
+    <hr class="req-hr">
+    <div class="resp">
+      <div class="flist">
+        <div class="f"><span class="tag json">JSON</span><div class="nm">Auto-formatted output</div><div class="dsc">Every response is colourised and structured. No piping to jq.</div></div>
+        <div class="f"><span class="tag auth">Auth</span><div class="nm">Native auth support</div><div class="dsc">Bearer tokens, basic auth, API keys. Inline, zero ceremony.</div></div>
+        <div class="f"><span class="tag ssn">Sessions</span><div class="nm">Persistent state</div><div class="dsc">Auth once, reuse. Cookies and headers survive across requests.</div></div>
+        <div class="f"><span class="tag dl">Downloads</span><div class="nm">File download</div><div class="dsc">Progress bars, resume support, auto-filename detection.</div></div>
+        <div class="f"><span class="tag clr">Colour</span><div class="nm">Syntax highlighting</div><div class="dsc">Headers cyan, keys blue, strings green. Readable immediately.</div></div>
+        <div class="f"><span class="tag spd">Rust</span><div class="nm">Blazing fast</div><div class="dsc">Single static binary. No runtime dependencies. Zero config.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 3. COMPARE ─── -->
+  <div class="req">
+    <div class="req-cmd">
+      <span class="prompt">$</span>
+      <span class="brand">xh</span>
+      <span class="url"><span class="h">get</span> /compare</span>
+    </div>
+    <hr class="req-hr">
+    <div class="resp">
+      <p>One POST request. Two experiences.</p>
+      <div class="compare">
+        <div class="c-card bad">
+          <div class="top">curl — 16 flags</div>
+          <div class="body">curl -s -H "Accept: application/json" \<br>  -H "Authorization: Bearer $TOKEN" \<br>  -X POST https://api.example.com/data \<br>  -d '{"name":"xh","type":"tool"}' \<br>  | jq .<br><span style="color:var(--dim)">// still debugging</span></div>
+        </div>
+        <div class="c-card good">
+          <div class="top">xh — 0 flags</div>
+          <div class="body">xh POST https://api.example.com/data \<br>  name=xh type=tool \<br>  Authorization:"Bearer $TOKEN"<br><br><span style="color:var(--green)">✓ HTTP/2.0 201 — readable. coloured. done.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 4. PLAYGROUND ─── -->
+  <div class="req" id="play">
+    <div class="req-cmd">
+      <span class="prompt">$</span>
+      <span class="brand">xh</span>
+      <span class="url"><span class="h">post</span> /try</span>
+    </div>
+    <hr class="req-hr">
+    <div class="resp">
+      <p>Type a command and see how xh would format it.</p>
+      <div class="pbox">
+        <div class="tabs">
+          <div class="tab on" data-p="users">GET /users</div>
+          <div class="tab" data-p="post">POST /data</div>
+          <div class="tab" data-p="auth">Auth</div>
+          <div class="tab" data-p="headers">Headers</div>
+        </div>
+        <div class="ir">
+          <span class="p">$</span>
+          <input id="inp" type="text" placeholder="xh GET https://api.example.com/..." spellcheck="false" autocomplete="off">
+          <button class="go" id="run">Run</button>
+        </div>
+        <div class="out" id="out"><div class="empty">▸ pick a preset or type a command</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 5. INSTALL ─── -->
+  <div class="req" id="install">
+    <div class="req-cmd">
+      <span class="prompt">$</span>
+      <span class="brand">xh</span>
+      <span class="url"><span class="h">get</span> /install</span>
+    </div>
+    <hr class="req-hr">
+    <div class="resp">
+      <div class="istack">
+        <div class="ir"><span class="lb">macOS</span><span class="cd">brew install xh</span><button data-c="brew install xh">Copy</button></div>
+        <div class="ir"><span class="lb">Any</span><span class="cd">cargo install xh</span><button data-c="cargo install xh">Copy</button></div>
+        <div class="ir"><span class="lb">Linux</span><span class="cd">snap install xh</span><button data-c="snap install xh">Copy</button></div>
+        <div class="ir"><span class="lb">Nix</span><span class="cd">nix-shell -p xh</span><button data-c="nix-shell -p xh">Copy</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 6. STATS ─── -->
+  <div class="req">
+    <div class="req-cmd">
+      <span class="prompt">$</span>
+      <span class="brand">xh</span>
+      <span class="url"><span class="h">get</span> /stats</span>
+    </div>
+    <hr class="req-hr">
+    <div class="resp">
+      <div class="srow">
+        <div class="s"><div class="v">7.9<span class="o">k</span></div><div class="l">Stars</div></div>
+        <div class="s"><div class="v">1.8<span class="o">k</span></div><div class="l">Commits</div></div>
+        <div class="s"><div class="v">39</div><div class="l">Releases</div></div>
+        <div class="s"><div class="v">99<span class="o">%</span></div><div class="l">Rust</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="inner">
+      <span>Concept for <a href="https://github.com/ducaale/xh" target="_blank" rel="noopener">xh</a> by <a href="https://blok-web-studio.netlify.app" target="_blank" rel="noopener">BLOK.</a></span>
+      <span>Fictional · Real design</span>
+    </div>
+  </footer>
 </div>
 
-<!-- ─── COMPARISON ─── -->
-<section id="comparison">
-  <div class="wrap">
-    <div class="section-head">
-      <div class="num">01</div>
-      <h2>curl vs xh</h2>
-      <p>Same request. One is readable. The other requires a manual.</p>
-    </div>
-    <div class="compare">
-      <div class="compare-card bad">
-        <div class="top">curl — 16 flags</div>
-        <div class="body">
-curl -s -H <span class="no">"Accept: application/json"</span> \<br>
-  -H <span class="no">"Authorization: Bearer $TOKEN"</span> \<br>
-  -X POST https://api.example.com/data \<br>
-  -d <span class="no">'{"name":"xh","type":"tool"}'</span> \<br>
-  | jq .<br><br>
-  <span class="no">// still debugging flags</span>
-        </div>
-      </div>
-      <div class="compare-card good">
-        <div class="top">xh — 0 flags</div>
-        <div class="body">
-xh POST https://api.example.com/data \<br>
-  <span class="ok">name=xh type=tool</span> \<br>
-  <span class="ok">Authorization:"Bearer $TOKEN"</span><br><br>
-  <span class="ok">✓ HTTP/2.0 201 — coloured. readable. done.</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ─── FEATURES ─── -->
-<section id="features">
-  <div class="wrap">
-    <div class="section-head">
-      <div class="num">02</div>
-      <h2>What you get</h2>
-      <p>Built for developers who want responses they can actually read.</p>
-    </div>
-    <div class="feats">
-      <div class="feat">
-        <div class="icon">📄</div>
-        <h3>JSON by default</h3>
-        <p>Every response is automatically formatted and coloured. No piping to jq.</p>
-      </div>
-      <div class="feat">
-        <div class="icon">🔐</div>
-        <h3>Native auth</h3>
-        <p>Bearer tokens, basic auth, API keys — inline, zero ceremony.</p>
-      </div>
-      <div class="feat">
-        <div class="icon">💾</div>
-        <h3>Sessions</h3>
-        <p>Auth once, reuse across requests. Cookies and headers persist.</p>
-      </div>
-      <div class="feat">
-        <div class="icon">🎨</div>
-        <h3>Colourised output</h3>
-        <p>Headers in cyan, keys blue, strings green. Readable at a glance.</p>
-      </div>
-      <div class="feat">
-        <div class="icon">⬇️</div>
-        <h3>Downloads</h3>
-        <p>Progress bars, resume, auto-filename. No extra tools.</p>
-      </div>
-      <div class="feat">
-        <div class="icon">⚡</div>
-        <h3>Blazing fast</h3>
-        <p>Single Rust binary. No Node, no Python. Zero setup.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ─── PLAYGROUND ─── -->
-<section id="playground">
-  <div class="wrap">
-    <div class="section-head">
-      <div class="num">03</div>
-      <h2>Try it</h2>
-      <p>No install needed. Pick a preset or type your own command.</p>
-    </div>
-    <div class="playground-box">
-      <div class="tabs">
-        <div class="tab active" data-preset="users">GET /users</div>
-        <div class="tab" data-preset="post">POST /data</div>
-        <div class="tab" data-preset="auth">Auth</div>
-        <div class="tab" data-preset="headers">Headers</div>
-      </div>
-      <div class="input-row">
-        <span class="prompt">$</span>
-        <input id="pgInput" type="text" placeholder="xh GET https://api.example.com/..." spellcheck="false" autocomplete="off">
-        <button class="run" id="pgRun">Run</button>
-      </div>
-      <div class="output" id="pgOutput"><div class="empty">▸ pick a preset or type a command</div></div>
-    </div>
-  </div>
-</section>
-
-<!-- ─── INSTALL ─── -->
-<section id="install">
-  <div class="wrap">
-    <div class="section-head">
-      <div class="num">04</div>
-      <h2>Install</h2>
-      <p>One line. Works on macOS, Linux, and Windows.</p>
-    </div>
-    <div class="install-grid">
-      <div class="install-row"><div><div class="lbl">macOS</div><div class="cmd">brew install xh</div></div><button data-cmd="brew install xh">Copy</button></div>
-      <div class="install-row"><div><div class="lbl">Any</div><div class="cmd">cargo install xh</div></div><button data-cmd="cargo install xh">Copy</button></div>
-      <div class="install-row"><div><div class="lbl">Linux</div><div class="cmd">snap install xh</div></div><button data-cmd="snap install xh">Copy</button></div>
-      <div class="install-row"><div><div class="lbl">Nix</div><div class="cmd">nix-shell -p xh</div></div><button data-cmd="nix-shell -p xh">Copy</button></div>
-    </div>
-  </div>
-</section>
-
-<!-- ─── STATS ─── -->
-<section>
-  <div class="wrap">
-    <div class="stats">
-      <div class="stat"><div class="v">7.9<span class="o">k</span></div><div class="l">Stars</div></div>
-      <div class="stat"><div class="v">1.8<span class="o">k</span></div><div class="l">Commits</div></div>
-      <div class="stat"><div class="v">39</div><div class="l">Releases</div></div>
-      <div class="stat"><div class="v">99<span class="o">%</span></div><div class="l">Rust</div></div>
-    </div>
-  </div>
-</section>
-
-<!-- ─── FOOTER ─── -->
-<footer>
-  <div class="wrap flex">
-    <span class="muted">Showcase for <a href="https://github.com/ducaale/xh" target="_blank" rel="noopener">xh</a> · Built by <a href="https://blok-web-studio.netlify.app" target="_blank" rel="noopener">BLOK. WebDev Studio</a></span>
-    <span class="muted">Fictional concept · Real design</span>
-  </div>
-</footer>
-
 <script>
-// ─── MOUSE TILT (hero code block) ───
-(function(){
-  const block = document.getElementById('heroBlock');
-  if(!block||window.matchMedia('(pointer:coarse)').matches)return;
-  let mx=0,my=0,rx=0,ry=0,raf=null;
-  const a=1.8,l=0.045;
-  window.addEventListener('mousemove',e=>{mx=((e.clientX/window.innerWidth)-.5)*2;my=((e.clientY/window.innerHeight)-.5)*2},{passive:true});
-  function t(){
-    ry+=((mx*a)-ry)*l;rx+=((-my*a)-rx)*l;
-    block.style.transform=`rotateX(${rx}deg) rotateY(${ry}deg)`;
-    raf=requestAnimationFrame(t);
-  }
-  const o=new IntersectionObserver(e=>{e.forEach(e=>{e.isIntersecting&&!raf?t():!e.isIntersecting&&raf&&(cancelAnimationFrame(raf),raf=null,block.style.transform='',rx=0,ry=0)})},{threshold:0});
-  o.observe(block);
-})();
-
 // ─── PLAYGROUND ───
 (function(){
-  const i=document.getElementById('pgInput'),o=document.getElementById('pgOutput'),r=document.getElementById('pgRun');
+  const i=document.getElementById('inp'),o=document.getElementById('out'),r=document.getElementById('run');
   const tabs=document.querySelectorAll('.tab');
   const demos={
-    users:{cmd:'xh GET https://api.example.com/users',res:'HTTP/2.0 200 OK\x0acontent-type: application/json\x0a\x0a{\n  "users": [\n    {"id": 1, "name": "Alice", "role": "admin"},\n    {"id": 2, "name": "Bob", "role": "editor"},\n    {"id": 3, "name": "Carol", "role": "viewer"}\n  ],\n  "total": 3\n}'},
-    post:{cmd:'xh POST https://api.example.com/data name=xh type=tool',res:'HTTP/2.0 201 Created\x0acontent-type: application/json\x0a\x0a{\n  "id": "req_abc123",\n  "name": "xh",\n  "type": "tool",\n  "created": "2024-06-15T10:30:00Z",\n  "status": "active"\n}'},
-    auth:{cmd:'xh GET https://api.example.com/admin Authorization:"Bearer $TOKEN"',res:'HTTP/2.0 200 OK\x0ax-auth-scope: admin\x0acontent-type: application/json\x0a\x0a{\n  "session": "valid",\n  "user": "admin",\n  "permissions": ["read","write","delete"]\n}'},
-    headers:{cmd:'xh GET https://api.example.com/health',res:'HTTP/2.0 200 OK\x0acache-control: no-cache\x0acontent-type: application/json\x0a\x0a{\n  "status": "healthy",\n  "uptime": "14d 6h 32m",\n  "version": "2.4.1"\n}'}
+    users:{c:'xh GET https://api.example.com/users',r:'HTTP/2.0 200 OK\ncontent-type: application/json\n\n{\n  "users": [\n    {"id":1,"name":"Alice","role":"admin"},\n    {"id":2,"name":"Bob","role":"editor"},\n    {"id":3,"name":"Carol","role":"viewer"}\n  ],\n  "total": 3\n}'},
+    post:{c:'xh POST https://api.example.com/data name=xh type=tool',r:'HTTP/2.0 201 Created\ncontent-type: application/json\n\n{\n  "id": "req_abc123",\n  "name": "xh",\n  "type": "tool",\n  "created": "2024-06-15T10:30:00Z"\n}'},
+    auth:{c:'xh GET https://api.example.com/admin Authorization:"Bearer $TOKEN"',r:'HTTP/2.0 200 OK\nx-auth-scope: admin\ncontent-type: application/json\n\n{\n  "user": "admin",\n  "permissions": ["read","write","delete"]\n}'},
+    headers:{c:'xh GET https://api.example.com/health',r:'HTTP/2.0 200 OK\ncache-control: no-cache\ncontent-type: application/json\n\n{\n  "status": "healthy",\n  "uptime": "14d 6h 32m",\n  "version": "2.4.1"\n}'}
   };
-  function sh(t){
+  function fmt(t){
     return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-      .replace(/"(key|status|session|user|permissions|total|id|name|role|created|type|message|uptime|version|description|language|license|stars|active)"/g,'<span class="s-k">"$1"</span>')
-      .replace(/: "([^"]+)"/g,': <span class="s-s">"$1"</span>')
-      .replace(/: (\d+[k]?)/g,': <span class="s-n">$1</span>')
-      .replace(/: (true|false)/g,': <span class="s-b">$1</span>')
-      .replace(/(HTTP\/[\d.]+ \d+)/g,'<span class="s-h">$1</span>');
+      .replace(/"(name|stars|language|license|message|method|format|id|created|type|status|users|total|user|permissions|role|session|uptime|version)"/g,'<span class="k">"$1"</span>')
+      .replace(/: "([^"]+)"/g,': <span class="s">"$1"</span>')
+      .replace(/: (\d+[k]?)/g,': <span class="n">$1</span>')
+      .replace(/: (true|false)/g,': <span class="b">$1</span>')
+      .replace(/(HTTP\/[\d.]+ \d+\w*)/g,'<span class="h">$1</span>');
   }
-  function exec(cmd){
-    const c=cmd.toLowerCase();
-    let res=null;
-    for(const[k,v]of Object.entries(demos)){if(c.includes(k)||cmd.includes('users')||cmd.includes('data')||cmd.includes('admin')||cmd.includes('health')){res=v.res;break}}
-    if(!res){const m=c.includes('post')?'POST':'GET';res=`HTTP/2.0 ${m==='POST'?'201':'200'} OK\x0acontent-type: application/json\x0a\x0a{\n  "message": "response from xh",\n  "method": "${m}",\n  "format": "auto-colourised"\n}`}
-    o.innerHTML=sh(res);
+  function run(cmd){
+    const l=cmd.toLowerCase();let res=null;
+    for(const[k,v]of Object.entries(demos)){
+      if(l.includes(k)||cmd.includes('api.example.com')){res=v.r;break}
+    }
+    if(!res){
+      const m=l.includes('post')?'POST':'GET';
+      res=`HTTP/2.0 ${m==='POST'?'201':'200'} OK\ncontent-type: application/json\n\n{\n  "message": "response from xh",\n  "method": "${m}"\n}`
+    }
+    o.innerHTML=fmt(res);
   }
   tabs.forEach(t=>{
     t.addEventListener('click',()=>{
-      tabs.forEach(x=>x.classList.remove('active'));t.classList.add('active');
-      const d=demos[t.dataset.preset];if(d){i.value=d.cmd;o.innerHTML=sh(d.res)}
+      tabs.forEach(x=>x.classList.remove('on'));t.classList.add('on');
+      const d=demos[t.dataset.p];if(d){i.value=d.c;o.innerHTML=fmt(d.r)}
     });
   });
-  r.addEventListener('click',()=>{const c=i.value.trim();if(c)exec(c)});
+  r.addEventListener('click',()=>{const c=i.value.trim();if(c)run(c)});
   i.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();r.click()}});
-  if(demos.users){i.value=demos.users.cmd;o.innerHTML=sh(demos.users.res)}
+  if(demos.users){i.value=demos.users.c;o.innerHTML=fmt(demos.users.r)}
 })();
 
-// ─── COPY BUTTONS ───
+// ─── COPY ───
 document.addEventListener('click',async e=>{
-  const b=e.target.closest('.install-row button');if(!b)return;
-  const c=b.dataset.cmd;if(!c)return;
+  const b=e.target.closest('.istack button');if(!b)return;
+  const c=b.dataset.c;if(!c)return;
   try{await navigator.clipboard.writeText(c);b.textContent='✓';b.classList.add('ok');setTimeout(()=>{b.textContent='Copy';b.classList.remove('ok')},1800)}catch{}
 });
 
 // ─── SCROLL REVEAL ───
 (function(){
   if(!('IntersectionObserver'in window))return;
-  const o=new IntersectionObserver(e=>{e.forEach(e=>{if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)'}})},{threshold:0.08,rootMargin:'0px 0px -40px 0px'});
-  document.querySelectorAll('.feat,.compare-card,.stat,.install-row').forEach(el=>{el.style.opacity='0';el.style.transform='translateY(14px)';el.style.transition='opacity 0.4s ease,transform 0.4s ease';o.observe(el)});
+  const o=new IntersectionObserver(e=>{e.forEach(e=>{if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)'}})},{threshold:0.06,rootMargin:'0px 0px -30px 0px'});
+  document.querySelectorAll('.flist .f,.c-card,.istack .ir,.srow .s,.pbox').forEach(el=>{el.style.opacity='0';el.style.transform='translateY(12px)';el.style.transition='opacity 0.35s ease,transform 0.35s ease';o.observe(el)});
 })();
 </script>
 </body>
