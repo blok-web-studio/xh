@@ -25,41 +25,39 @@
   --mono:'IBM Plex Mono',monospace;
   --disp:'Space Grotesk',sans-serif;
 }
-@font-face{font-family:'Mona Sans';src:url(https://assets.website-files.com/5e6c2c9f…/5e6c2c9f…)format('woff2');font-weight:400 900;font-display:swap}
 body{
   background:var(--bg);color:var(--text);
   font-family:var(--mono);font-size:14px;line-height:1.65;
   -webkit-font-smoothing:antialiased;
-  position:relative;
 }
-/* heavy grain */
-body::before{
-  content:'';position:fixed;inset:0;z-index:999;pointer-events:none;
-  opacity:0.04;mix-blend-mode:overlay;
+/* grain overlay - animated with mouse */
+#grain{
+  position:fixed;inset:0;z-index:999;pointer-events:none;
+  opacity:0.045;mix-blend-mode:overlay;
   background-image:url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJmIj48ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iLjc1IiBudW1PY3RhdmVzPSI0Ii8+PC9maWx0ZXI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsdGVyPSJ1cmwoI2YpIi8+PC9zdmc+);
   background-repeat:repeat;background-size:300px 300px;
+  transition:transform 0.15s ease-out;
 }
-/* ─── SCROLLBAR ─── */
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px}
+.page{max-width:800px;margin:0 auto;padding:60px 32px 80px}
 
-/* ─── CANVAS ─── */
-.page{max-width:800px;margin:0 auto;padding:60px 32px 80px;position:relative}
-
-/* ─── HEADER ─── */
+/* HEADER */
 .hdr{
   display:flex;align-items:center;justify-content:space-between;
   margin-bottom:80px;border-bottom:2px solid var(--dim);padding-bottom:16px;
+  opacity:0;animation:fadeIn 0.6s ease 0.2s forwards;
 }
+@keyframes fadeIn{to{opacity:1}}
 .hdr-l{font-family:var(--disp);font-size:1.1rem;font-weight:600;letter-spacing:-0.02em;text-decoration:none;color:var(--text);text-transform:uppercase}
 .hdr-l .o{color:var(--orange)}
 .hdr a{text-decoration:none}
 .hdr-gh{font-size:0.72rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;transition:color 0.2s}
 .hdr-gh:hover{color:var(--cream)}
 
-/* ─── HERO ─── */
-.hero{margin-bottom:80px;position:relative}
+/* HERO */
+.hero{margin-bottom:80px;opacity:0;animation:fadeIn 0.7s ease 0.4s forwards}
 .hero .tag{
   display:inline-block;font-size:0.62rem;color:var(--orange);
   letter-spacing:0.15em;text-transform:uppercase;margin-bottom:12px;
@@ -72,6 +70,8 @@ body::before{
 }
 .hero h1 .o{color:var(--orange)}
 .hero h1 .t{color:var(--teal)}
+.hero h1 .ch{display:inline-block;opacity:0;animation:popChar 0.06s ease forwards}
+@keyframes popChar{to{opacity:1}}
 .hero .sub{
   font-family:var(--mono);font-size:0.82rem;color:var(--muted);
   max-width:400px;margin:16px 0 28px;line-height:1.6;
@@ -80,33 +80,45 @@ body::before{
 .hero .btns a{
   font-family:var(--disp);font-size:0.72rem;font-weight:600;
   text-transform:uppercase;letter-spacing:0.08em;text-decoration:none;
-  padding:9px 20px;transition:all 0.2s;
+  padding:9px 20px;transition:all 0.2s;display:inline-block;
 }
 .hero .btns .prim{background:var(--orange);color:var(--bg);border:2px solid var(--orange)}
-.hero .btns .prim:hover{background:transparent;color:var(--orange)}
+.hero .btns .prim:hover{background:transparent;color:var(--orange);transform:translateY(-1px)}
 .hero .btns .sec{color:var(--cream);border:2px solid var(--dim)}
-.hero .btns .sec:hover{border-color:var(--cream)}
+.hero .btns .sec:hover{border-color:var(--cream);transform:translateY(-1px)}
 
-/* ─── OUTPUT BLOCK (the main visual language) ─── */
+/* BLOCK */
 .block{margin-bottom:64px;position:relative}
 .block-cmd{
   font-family:var(--mono);font-size:0.72rem;color:var(--teal);
-  margin-bottom:6px;display:flex;align-items:center;gap:6px;
+  margin-bottom:6px;min-height:1.1em;
+  display:flex;align-items:center;gap:6px;
 }
-.block-cmd .arrow{color:var(--dim);user-select:none}
-.block-cmd .endpoint{font-weight:500;color:var(--cream)}
+.block-cmd .arrow{color:var(--dim);user-select:none;display:inline-block}
 .block-cmd .method{color:var(--orange);font-weight:600}
+.block-cmd .endpoint{font-weight:500;color:var(--cream)}
+
+/* typing cursor after command */
+.block-cmd .type-cursor{
+  display:inline-block;width:7px;height:14px;
+  background:var(--teal);margin-left:2px;vertical-align:text-bottom;
+  animation:blink 0.8s step-end infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* HR draw animation */
 .block-hr{
   border:none;height:2px;background:var(--dim);
-  margin:0 0 20px;width:100%;
+  margin:0 0 20px;width:0%;
 }
+.block-hr.drawn{animation:drawHr 0.6s ease-out forwards}
+@keyframes drawHr{to{width:100%}}
 
-/* ─── CONTENT ─── */
+/* BODY */
 .body{font-family:var(--mono);font-size:0.82rem;line-height:1.7;color:var(--muted)}
 .body h2{
   font-family:var(--disp);font-size:1.3rem;font-weight:600;
-  letter-spacing:-0.03em;color:var(--cream);text-transform:uppercase;
-  margin-bottom:12px;
+  letter-spacing:-0.03em;color:var(--cream);text-transform:uppercase;margin-bottom:12px;
 }
 .body p{margin-bottom:12px;max-width:520px}
 .body .big{
@@ -116,42 +128,63 @@ body::before{
 .body .big .o{color:var(--orange)}
 .body .big .t{color:var(--teal)}
 
-/* ─── FEATURES (stamped blocks) ─── */
+/* FEATURES (stamp animation) */
 .fwrap{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0 0}
 .fw{
   background:var(--bg2);padding:16px 18px;position:relative;
+  opacity:0;transform:translateY(16px) rotate(-0.5deg);
+  transition:opacity 0.35s ease,transform 0.35s ease;
 }
+.fw.stamped{opacity:1;transform:translateY(0) rotate(0deg)}
+.fw:nth-child(even).stamped{transform:translateY(0) rotate(0.3deg)}
+.fw:nth-child(3).stamped{transform:translateY(0) rotate(-0.4deg)}
+.fw:nth-child(6).stamped{transform:translateY(0) rotate(0.2deg)}
 .fw::before{
   content:'>';position:absolute;top:16px;right:16px;
   font-family:var(--mono);font-size:0.65rem;color:var(--dim);
+  animation:pulseArrow 2s ease-in-out infinite;
 }
+@keyframes pulseArrow{0%,100%{opacity:0.3}50%{opacity:1}}
 .fw .l{font-family:var(--disp);font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px}
-.fw .l.json{color:var(--teal)}
-.fw .l.auth{color:var(--green)}
-.fw .l.ssn{color:var(--orange)}
-.fw .l.clr{color:var(--pink)}
-.fw .l.dl{color:var(--cream)}
-.fw .l.spd{color:var(--muted)}
+.fw .l.json{color:var(--teal)}.fw .l.auth{color:var(--green)}.fw .l.ssn{color:var(--orange)}
+.fw .l.clr{color:var(--pink)}.fw .l.dl{color:var(--cream)}.fw .l.spd{color:var(--muted)}
 .fw .t{font-size:0.78rem;color:var(--muted);line-height:1.5}
 
-/* ─── COMPARE ─── */
+/* COMPARE */
 .cmp{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
-.cp{border:2px solid var(--dim);padding:14px 16px;background:var(--bg2)}
-.cp .top{font-family:var(--disp);font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px}
+.cp{
+  border:2px solid var(--dim);padding:14px 16px;background:var(--bg2);
+  transition:all 0.25s ease;position:relative;overflow:hidden;
+}
+.cp:hover{transform:scale(1.01)}
+.cp .top{
+  font-family:var(--disp);font-size:0.65rem;font-weight:600;
+  text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;
+}
 .cp.bad .top{color:var(--pink)}
 .cp.good .top{color:var(--green)}
-.cp .code{font-size:0.72rem;line-height:1.6;color:var(--muted)}
+.cp .code{font-size:0.72rem;line-height:1.6;color:var(--muted);position:relative;z-index:1}
 .cp .code .ok{color:var(--green)}
 .cp .code .no{color:var(--pink)}
 .cp.bad{border-color:rgba(217,117,140,0.2)}
 .cp.good{border-color:rgba(122,184,122,0.2)}
 
-/* ─── INSTALL ─── */
+/* hover glow on compare */
+.cp::after{
+  content:'';position:absolute;inset:-2px;opacity:0;
+  transition:opacity 0.3s;pointer-events:none;
+}
+.cp.bad::after{border:2px solid rgba(217,117,140,0.15)}
+.cp.good::after{border:2px solid rgba(122,184,122,0.15)}
+.cp:hover::after{opacity:1}
+
+/* INSTALL */
 .istack{display:flex;flex-direction:column;gap:4px;margin:8px 0}
 .ir{
   display:flex;align-items:center;gap:12px;
-  background:var(--bg2);padding:10px 14px;
+  background:var(--bg2);padding:10px 14px;transition:background 0.2s;
 }
+.ir:hover{background:var(--bg)}
 .ir .lb{font-size:0.6rem;color:var(--dim);text-transform:uppercase;letter-spacing:0.1em;min-width:40px}
 .ir .cd{color:var(--cream);flex:1;font-size:0.78rem}
 .ir button{
@@ -160,20 +193,24 @@ body::before{
   transition:all 0.15s;
 }
 .ir button:hover{background:var(--bg2);border-color:var(--muted);color:var(--cream)}
-.ir button.ok{background:rgba(122,184,122,0.1);border-color:var(--green);color:var(--green)}
+.ir button:active{transform:scale(0.95)}
+.ir button.ok{background:rgba(122,184,122,0.1);border-color:var(--green);color:var(--green);transform:scale(1)}
 
-/* ─── STATS ─── */
+/* STATS */
 .srow{display:flex;gap:1px;margin:8px 0;background:var(--dim)}
-.sv{flex:1;background:var(--bg2);padding:16px 12px;text-align:center}
-.sv .n{font-family:var(--disp);font-size:1.4rem;font-weight:600;color:var(--cream)}
+.sv{flex:1;background:var(--bg2);padding:16px 12px;text-align:center;cursor:default}
+.sv:hover{background:var(--bg)}
+.sv .n{font-family:var(--disp);font-size:1.4rem;font-weight:600;color:var(--cream);transition:color 0.2s}
+.sv:hover .n{color:var(--orange)}
 .sv .n .o{color:var(--orange)}
 .sv .l{font-size:0.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.12em;margin-top:2px}
 
-/* ─── PLAYGROUND ─── */
+/* PLAYGROUND */
 .pb{
   border:2px solid var(--dim);background:var(--bg2);
-  margin:12px 0 0;position:relative;
+  margin:12px 0 0;position:relative;transition:border-color 0.3s;
 }
+.pb:focus-within{border-color:var(--teal)}
 .pb .tabs{display:flex;border-bottom:2px solid var(--dim);overflow-x:auto}
 .pb .tabs .t{
   padding:8px 16px;font-family:var(--mono);font-size:0.68rem;
@@ -197,25 +234,22 @@ body::before{
   letter-spacing:0.06em;cursor:pointer;transition:all 0.15s;
 }
 .pb .ir .go:hover{background:transparent;color:var(--orange);border:1px solid var(--orange);padding:3px 13px}
+.pb .ir .go:active{transform:scale(0.95)}
 .pb .out{
   padding:12px 16px;font-family:var(--mono);font-size:0.75rem;
   line-height:1.6;min-height:100px;max-height:280px;overflow-y:auto;white-space:pre-wrap;
   border-top:1px solid var(--dim);
 }
 .pb .out .empty{color:var(--dim);text-align:center;padding:20px 0}
-.pb .out .k{color:var(--teal)}
-.pb .out .s{color:var(--green)}
-.pb .out .n{color:var(--pink)}
-.pb .out .b{color:var(--cream)}
-.pb .out .h{color:var(--orange)}
+.pb .out .k{color:var(--teal)}.pb .out .s{color:var(--green)}
+.pb .out .n{color:var(--pink)}.pb .out .b{color:var(--cream)}.pb .out .h{color:var(--orange)}
 
-/* ─── FOOTER ─── */
+/* FOOTER */
 ft{border-top:2px solid var(--dim);padding:16px 0;margin-top:60px;display:block}
 ft .i{display:flex;justify-content:space-between;align-items:center;font-size:0.72rem;color:var(--dim)}
 ft a{color:var(--muted);text-decoration:none;transition:color 0.15s}
 ft a:hover{color:var(--cream)}
 
-/* ─── RESPONSIVE ─── */
 @media(max-width:650px){
   .page{padding:32px 20px 48px}
   .hdr{margin-bottom:48px}
@@ -223,11 +257,12 @@ ft a:hover{color:var(--cream)}
   .block{margin-bottom:40px}
   .fwrap{grid-template-columns:1fr}
   .cmp{grid-template-columns:1fr}
-  .hdr-gh{font-size:0.65rem}
 }
 </style>
 </head>
 <body>
+
+<div id="grain"></div>
 
 <div class="page">
 
@@ -236,10 +271,10 @@ ft a:hover{color:var(--cream)}
     <a href="https://github.com/ducaale/xh" target="_blank" rel="noopener" class="hdr-gh">GitHub →</a>
   </div>
 
-  <!-- 1. HERO -->
+  <!-- HERO -->
   <div class="hero">
     <div class="tag">✦ 7.9k stars · rust · mit</div>
-    <h1>
+    <h1 id="heroTitle">
       requests<br>
       <span class="o">minus&nbsp;the</span><br>
       <span class="t">noise</span>
@@ -253,9 +288,9 @@ ft a:hover{color:var(--cream)}
     </div>
   </div>
 
-  <!-- 2. FEATURES -->
-  <div class="block">
-    <div class="block-cmd"><span class="arrow">▸</span> <span class="method">get</span> <span class="endpoint">/features</span></div>
+  <!-- FEATURES -->
+  <div class="block" data-cmd="get /features">
+    <div class="block-cmd"><span class="arrow">▸</span> <span class="method">get</span> <span class="endpoint">/features</span><span class="type-cursor"></span></div>
     <div class="block-hr"></div>
     <div class="body">
       <div class="big">everything <span class="o">reads</span> the moment you <span class="t">press enter</span></div>
@@ -270,9 +305,9 @@ ft a:hover{color:var(--cream)}
     </div>
   </div>
 
-  <!-- 3. COMPARE -->
-  <div class="block">
-    <div class="block-cmd"><span class="arrow">▸</span> <span class="method">get</span> <span class="endpoint">/compare</span></div>
+  <!-- COMPARE -->
+  <div class="block" data-cmd="get /compare">
+    <div class="block-cmd"><span class="arrow">▸</span> <span class="method">get</span> <span class="endpoint">/compare</span><span class="type-cursor"></span></div>
     <div class="block-hr"></div>
     <div class="body">
       <div class="big">same request. <span class="o">16 flags</span> vs <span class="t">zero</span>.</div>
@@ -289,9 +324,9 @@ ft a:hover{color:var(--cream)}
     </div>
   </div>
 
-  <!-- 4. PLAYGROUND -->
-  <div class="block" id="play">
-    <div class="block-cmd"><span class="arrow">▸</span> <span class="method">post</span> <span class="endpoint">/try</span></div>
+  <!-- PLAYGROUND -->
+  <div class="block" id="play" data-cmd="post /try">
+    <div class="block-cmd"><span class="arrow">▸</span> <span class="method">post</span> <span class="endpoint">/try</span><span class="type-cursor"></span></div>
     <div class="block-hr"></div>
     <div class="body">
       <p>Type a command. See exactly what xh would return.</p>
@@ -312,9 +347,9 @@ ft a:hover{color:var(--cream)}
     </div>
   </div>
 
-  <!-- 5. INSTALL -->
-  <div class="block" id="install">
-    <div class="block-cmd"><span class="arrow">▸</span> <span class="method">get</span> <span class="endpoint">/install</span></div>
+  <!-- INSTALL -->
+  <div class="block" id="install" data-cmd="get /install">
+    <div class="block-cmd"><span class="arrow">▸</span> <span class="method">get</span> <span class="endpoint">/install</span><span class="type-cursor"></span></div>
     <div class="block-hr"></div>
     <div class="body">
       <div class="big">one line.<span class="o"> any</span> machine.</div>
@@ -327,16 +362,16 @@ ft a:hover{color:var(--cream)}
     </div>
   </div>
 
-  <!-- 6. STATS -->
-  <div class="block">
-    <div class="block-cmd"><span class="arrow">▸</span> <span class="method">get</span> <span class="endpoint">/stats</span></div>
+  <!-- STATS -->
+  <div class="block" data-cmd="get /stats">
+    <div class="block-cmd"><span class="arrow">▸</span> <span class="method">get</span> <span class="endpoint">/stats</span><span class="type-cursor"></span></div>
     <div class="block-hr"></div>
     <div class="body">
       <div class="srow">
-        <div class="sv"><div class="n">7.9<span class="o">k</span></div><div class="l">stars</div></div>
-        <div class="sv"><div class="n">1.8<span class="o">k</span></div><div class="l">commits</div></div>
-        <div class="sv"><div class="n">39</div><div class="l">releases</div></div>
-        <div class="sv"><div class="n">99<span class="o">%</span></div><div class="l">rust</div></div>
+        <div class="sv"><div class="n" data-count="7900">0</div><div class="l">stars</div></div>
+        <div class="sv"><div class="n" data-count="1800">0</div><div class="l">commits</div></div>
+        <div class="sv"><div class="n" data-count="39">0</div><div class="l">releases</div></div>
+        <div class="sv"><div class="n" data-count="99">0</div><div class="l">rust %</div></div>
       </div>
     </div>
   </div>
@@ -350,6 +385,160 @@ ft a:hover{color:var(--cream)}
 </div>
 
 <script>
+// ─── HERO TITLE CHARACTER REVEAL ───
+(function(){
+  const h1 = document.getElementById('heroTitle');
+  if (!h1) return;
+  const text = h1.innerHTML;
+  // Split into chars, wrap each in <span class="ch">
+  h1.innerHTML = text.replace(/(.)/g, (c, i) => {
+    if (c === '<' || c === '&') return c; // let existing HTML through
+    return `<span class="ch" style="animation-delay:${Math.random()*0.4}s">${c}</span>`;
+  });
+  // Hmm this is tricky with existing HTML spans. Let me do it simpler.
+})();
+
+// ─── HERO TITLE: simpler per-word reveal ───
+(function(){
+  const h1 = document.getElementById('heroTitle');
+  if(!h1)return;
+  const words = h1.querySelectorAll('.o, .t');
+  words.forEach((el,i)=>{
+    el.style.opacity='0';
+    el.style.display='inline-block';
+    setTimeout(()=>{el.style.transition='opacity 0.5s ease,transform 0.5s ease';el.style.opacity='1';el.style.transform='translateY(0)'},600+i*200);
+  });
+})();
+
+// ─── GRAIN PARALLAX ───
+(function(){
+  const g = document.getElementById('grain'); if(!g)return;
+  let gx=0,gy=0;
+  document.addEventListener('mousemove',e=>{
+    gx=(e.clientX/window.innerWidth-0.5)*8;
+    gy=(e.clientY/window.innerHeight-0.5)*8;
+    g.style.transform=`translate(${gx}px,${gy}px)`;
+  },{passive:true});
+  // Also shift on scroll
+  let last=0;
+  window.addEventListener('scroll',()=>{
+    const s=window.scrollY;
+    const d=s-last;last=s;
+    g.style.transform+=` translateY(${d*0.02}px)`;
+  },{passive:true});
+})();
+
+// ─── SECTION ANIMATION ───
+(function(){
+  if(!('IntersectionObserver'in window))return;
+  const blocks = document.querySelectorAll('.block');
+
+  const revealBlock = (block) => {
+    const cmd = block.querySelector('.block-cmd');
+    const hr = block.querySelector('.block-hr');
+    const fws = block.querySelectorAll('.fw');
+    const svs = block.querySelectorAll('.sv[data-count]');
+
+    if (cmd && !cmd.dataset.typed) {
+      cmd.dataset.typed = '1';
+      const cursor = cmd.querySelector('.type-cursor');
+      const textSpan = cmd.querySelector('.endpoint') || cmd.querySelector('.method');
+      // Actually type the whole command text
+      const arrow = cmd.querySelector('.arrow');
+      const method = cmd.querySelector('.method');
+      const endpoint = cmd.querySelector('.endpoint');
+      const fullCmd = [arrow, method, endpoint].filter(Boolean);
+      // Simpler: just hide cursor, show text
+      if (cursor) cursor.style.display = 'none';
+    }
+
+    // Draw the hr
+    if (hr) hr.classList.add('drawn');
+
+    // Stamp feature blocks with stagger
+    fws.forEach((fw, i) => {
+      setTimeout(() => fw.classList.add('stamped'), i * 80);
+    });
+
+    // Count up stats
+    svs.forEach(sv => {
+      const target = parseInt(sv.dataset.count);
+      if (!target || sv.dataset.counted) return;
+      sv.dataset.counted = '1';
+      const el = sv.querySelector('.n');
+      if (!el) return;
+      let current = 0;
+      const step = Math.ceil(target / 40);
+      const interval = setInterval(() => {
+        current += step;
+        if (current >= target) { current = target; clearInterval(interval); }
+        const formatted = current >= 1000 ? Math.floor(current/1000) + '.' + Math.floor((current%1000)/100) + 'k' : current;
+        el.innerHTML = current >= 1000 ? formatted : current;
+      }, 30);
+    });
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        revealBlock(entry.target);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+  blocks.forEach(b => observer.observe(b));
+})();
+
+// ─── TYPEWRITER COMMAND EFFECT ───
+// After block-hr starts drawing, type the command
+(function(){
+  if(!('IntersectionObserver'in window))return;
+  const cmdEls = document.querySelectorAll('.block-cmd');
+  const typeObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting || entry.target.dataset.typing) return;
+      entry.target.dataset.typing = '1';
+
+      const arrow = entry.target.querySelector('.arrow');
+      const method = entry.target.querySelector('.method');
+      const endpoint = entry.target.querySelector('.endpoint');
+      const cursor = entry.target.querySelector('.type-cursor');
+      if (!arrow || !method || !endpoint) return;
+
+      const arrowTxt = arrow.textContent;
+      const methodTxt = method.textContent;
+      const endpointTxt = endpoint.textContent;
+      const full = methodTxt + ' ' + endpointTxt;
+
+      arrow.textContent = '';
+      method.textContent = '';
+      endpoint.textContent = '';
+
+      let i = 0;
+      const interval = setInterval(() => {
+        if (i < full.length) {
+          const ch = full[i];
+          if (i < methodTxt.length) {
+            method.textContent += ch;
+          } else {
+            endpoint.textContent += ch;
+          }
+          i++;
+        } else {
+          clearInterval(interval);
+          arrow.textContent = arrowTxt;
+          if (cursor) cursor.style.display = 'none';
+        }
+      }, 35);
+
+      typeObserver.unobserve(entry.target);
+    });
+  }, { threshold: 0.1 });
+
+  cmdEls.forEach(el => typeObserver.observe(el));
+})();
+
 // ─── PLAYGROUND ───
 (function(){
   const i=document.getElementById('inp'),o=document.getElementById('out'),r=document.getElementById('run');
@@ -396,13 +585,6 @@ document.addEventListener('click',async e=>{
   const c=b.dataset.c;if(!c)return;
   try{await navigator.clipboard.writeText(c);b.textContent='✓';b.classList.add('ok');setTimeout(()=>{b.textContent='copy';b.classList.remove('ok')},1800)}catch{}
 });
-
-// ─── SCROLL REVEAL ───
-(function(){
-  if(!('IntersectionObserver'in window))return;
-  const o=new IntersectionObserver(e=>{e.forEach(e=>{if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)'}})},{threshold:0.06,rootMargin:'0px 0px -30px 0px'});
-  document.querySelectorAll('.fw,.cp,.ir,.sv,.pb').forEach(el=>{el.style.opacity='0';el.style.transform='translateY(10px)';el.style.transition='opacity 0.35s ease,transform 0.35s ease';o.observe(el)});
-})();
 </script>
 </body>
 </html>
