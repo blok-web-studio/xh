@@ -70,8 +70,7 @@ body{
 }
 .hero h1 .o{color:var(--orange)}
 .hero h1 .t{color:var(--teal)}
-.hero h1 .ch{display:inline-block;opacity:0;animation:popChar 0.06s ease forwards}
-@keyframes popChar{to{opacity:1}}
+
 .hero .sub{
   font-family:var(--mono);font-size:0.82rem;color:var(--muted);
   max-width:400px;margin:16px 0 28px;line-height:1.6;
@@ -244,12 +243,6 @@ body{
 .pb .out .k{color:var(--teal)}.pb .out .s{color:var(--green)}
 .pb .out .n{color:var(--pink)}.pb .out .b{color:var(--cream)}.pb .out .h{color:var(--orange)}
 
-/* FOOTER */
-ft{border-top:2px solid var(--dim);padding:16px 0;margin-top:60px;display:block}
-ft .i{display:flex;justify-content:space-between;align-items:center;font-size:0.72rem;color:var(--dim)}
-ft a{color:var(--muted);text-decoration:none;transition:color 0.15s}
-ft a:hover{color:var(--cream)}
-
 @media(max-width:650px){
   .page{padding:32px 20px 48px}
   .hdr{margin-bottom:48px}
@@ -376,29 +369,11 @@ ft a:hover{color:var(--cream)}
     </div>
   </div>
 
-  <ft>
-    <div class="i">
-      <span>concept for <a href="https://github.com/ducaale/xh" target="_blank" rel="noopener">xh</a> · <a href="https://blok-web-studio.netlify.app" target="_blank" rel="noopener">blok.</a></span>
-      <span>fictional · real design</span>
-    </div>
-  </ft>
+
 </div>
 
 <script>
-// ─── HERO TITLE CHARACTER REVEAL ───
-(function(){
-  const h1 = document.getElementById('heroTitle');
-  if (!h1) return;
-  const text = h1.innerHTML;
-  // Split into chars, wrap each in <span class="ch">
-  h1.innerHTML = text.replace(/(.)/g, (c, i) => {
-    if (c === '<' || c === '&') return c; // let existing HTML through
-    return `<span class="ch" style="animation-delay:${Math.random()*0.4}s">${c}</span>`;
-  });
-  // Hmm this is tricky with existing HTML spans. Let me do it simpler.
-})();
-
-// ─── HERO TITLE: simpler per-word reveal ───
+// ─── HERO TITLE: simple word fade-in ───
 (function(){
   const h1 = document.getElementById('heroTitle');
   if(!h1)return;
