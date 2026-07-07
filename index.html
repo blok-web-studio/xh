@@ -4,210 +4,226 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>xh</title>
-<meta name="description" content="xh is a CLI HTTP client. Colourised output. JSON by default. Auth, sessions, downloads. Written in Rust.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23ff6b35'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='monospace' font-size='18' fill='white'%3Exh%3C/text%3E%3C/svg%3E">
+<meta name="description" content="xh is a CLI HTTP client. Colourised output. JSON by default. Auth, sessions, downloads.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23e85d30'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='monospace' font-size='18' fill='%23f5ede1'%3Exh%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0a0a0e;
-  --card:#111116;
-  --border:#1e1e2c;
-  --text:#e4e4ee;
-  --muted:#6a6a82;
-  --dim:#3a3a4e;
-  --orange:#ff6b35;
-  --green:#4ade80;
-  --blue:#60a5fa;
-  --pink:#f472b6;
-  --cyan:#22d3ee;
-  --yellow:#fbbf24;
-  --red:#ef4444;
-  --mono:'JetBrains Mono','SF Mono',monospace;
-  --sans:'Inter',system-ui,sans-serif;
+  --bg:#141210;
+  --bg2:#1c1916;
+  --text:#e8ddd0;
+  --muted:#a0927e;
+  --dim:#6b5f4e;
+  --orange:#e85d30;
+  --cream:#d4c5ad;
+  --teal:#3dab9b;
+  --green:#7ab87a;
+  --pink:#d9758c;
+  --mono:'IBM Plex Mono',monospace;
+  --disp:'Space Grotesk',sans-serif;
 }
+@font-face{font-family:'Mona Sans';src:url(https://assets.website-files.com/5e6c2c9f…/5e6c2c9f…)format('woff2');font-weight:400 900;font-display:swap}
 body{
   background:var(--bg);color:var(--text);
-  font-family:var(--sans);-webkit-font-smoothing:antialiased;
-  line-height:1.65;
+  font-family:var(--mono);font-size:14px;line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+  position:relative;
 }
-::selection{background:var(--orange);color:#fff}
+/* heavy grain */
+body::before{
+  content:'';position:fixed;inset:0;z-index:999;pointer-events:none;
+  opacity:0.04;mix-blend-mode:overlay;
+  background-image:url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJmIj48ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iLjc1IiBudW1PY3RhdmVzPSI0Ii8+PC9maWx0ZXI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsdGVyPSJ1cmwoI2YpIi8+PC9zdmc+);
+  background-repeat:repeat;background-size:300px 300px;
+}
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px}
 
-/* ─── LAYOUT ─── */
-.page{max-width:780px;margin:0 auto;padding:48px 28px 64px}
+/* ─── CANVAS ─── */
+.page{max-width:800px;margin:0 auto;padding:60px 32px 80px;position:relative}
 
 /* ─── HEADER ─── */
-header{
+.hdr{
   display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:64px;
+  margin-bottom:80px;border-bottom:2px solid var(--dim);padding-bottom:16px;
 }
-header .l{font-family:var(--mono);font-weight:700;font-size:1rem;color:var(--text);text-decoration:none}
-header .l span{color:var(--orange)}
-header a{text-decoration:none}
-header .gh{
-  font-size:0.82rem;color:var(--muted);font-weight:500;
-  padding:6px 14px;border:1px solid var(--border);border-radius:6px;transition:all 0.2s;
-}
-header .gh:hover{border-color:var(--dim);color:var(--text)}
+.hdr-l{font-family:var(--disp);font-size:1.1rem;font-weight:600;letter-spacing:-0.02em;text-decoration:none;color:var(--text);text-transform:uppercase}
+.hdr-l .o{color:var(--orange)}
+.hdr a{text-decoration:none}
+.hdr-gh{font-size:0.72rem;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;transition:color 0.2s}
+.hdr-gh:hover{color:var(--cream)}
 
-/* ─── REQUEST BLOCK ─── */
-.req{margin-bottom:48px}
-.req-hr{
-  border:none;height:1px;background:var(--border);margin:12px 0 20px;
+/* ─── HERO ─── */
+.hero{margin-bottom:80px;position:relative}
+.hero .tag{
+  display:inline-block;font-size:0.62rem;color:var(--orange);
+  letter-spacing:0.15em;text-transform:uppercase;margin-bottom:12px;
+  border:1px solid rgba(232,93,48,0.2);padding:2px 8px;border-radius:2px;
 }
-.req-cmd{
-  font-family:var(--mono);font-size:0.82rem;color:var(--green);
-  display:flex;align-items:baseline;gap:6px;
+.hero h1{
+  font-family:var(--disp);font-size:clamp(2.6rem,8vw,4.8rem);font-weight:700;
+  line-height:0.92;letter-spacing:-0.06em;text-transform:uppercase;
+  margin-bottom:8px;color:var(--cream);
 }
-.req-cmd .prompt{color:var(--dim);user-select:none}
-.req-cmd .url{color:var(--muted);font-weight:400}
-.req-cmd .url .h{color:var(--cyan)}
-.req-cmd .brand{color:var(--orange);font-weight:500}
+.hero h1 .o{color:var(--orange)}
+.hero h1 .t{color:var(--teal)}
+.hero .sub{
+  font-family:var(--mono);font-size:0.82rem;color:var(--muted);
+  max-width:400px;margin:16px 0 28px;line-height:1.6;
+}
+.hero .btns{display:flex;gap:10px;flex-wrap:wrap}
+.hero .btns a{
+  font-family:var(--disp);font-size:0.72rem;font-weight:600;
+  text-transform:uppercase;letter-spacing:0.08em;text-decoration:none;
+  padding:9px 20px;transition:all 0.2s;
+}
+.hero .btns .prim{background:var(--orange);color:var(--bg);border:2px solid var(--orange)}
+.hero .btns .prim:hover{background:transparent;color:var(--orange)}
+.hero .btns .sec{color:var(--cream);border:2px solid var(--dim)}
+.hero .btns .sec:hover{border-color:var(--cream)}
 
-/* ─── CONTENT TYPES ─── */
-.resp{font-size:0.95rem;line-height:1.7;color:var(--muted)}
-.resp h1{
-  font-family:var(--sans);font-size:clamp(1.6rem,4vw,2.6rem);font-weight:700;
-  color:var(--text);line-height:1.1;letter-spacing:-0.035em;margin:0 0 12px;
+/* ─── OUTPUT BLOCK (the main visual language) ─── */
+.block{margin-bottom:64px;position:relative}
+.block-cmd{
+  font-family:var(--mono);font-size:0.72rem;color:var(--teal);
+  margin-bottom:6px;display:flex;align-items:center;gap:6px;
 }
-.resp h1 .o{color:var(--orange)}
-.resp p{margin-bottom:12px;max-width:560px}
-.resp .btns{margin-top:20px;display:flex;gap:10px}
-.resp .btn{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:10px 20px;border-radius:7px;font-size:0.85rem;
-  font-weight:600;text-decoration:none;transition:all 0.2s;font-family:var(--sans);
+.block-cmd .arrow{color:var(--dim);user-select:none}
+.block-cmd .endpoint{font-weight:500;color:var(--cream)}
+.block-cmd .method{color:var(--orange);font-weight:600}
+.block-hr{
+  border:none;height:2px;background:var(--dim);
+  margin:0 0 20px;width:100%;
 }
-.resp .btn.prim{background:var(--orange);color:#fff}
-.resp .btn.prim:hover{box-shadow:0 4px 20px rgba(255,107,53,0.2)}
-.resp .btn.sec{background:var(--card);border:1px solid var(--border);color:var(--text)}
-.resp .btn.sec:hover{background:var(--border)}
 
-/* ─── JSON OUTPUT (inline, not in a box) ─── */
-.resp .json{
-  font-family:var(--mono);font-size:0.82rem;line-height:1.8;
-  color:var(--muted);margin:8px 0 0;
+/* ─── CONTENT ─── */
+.body{font-family:var(--mono);font-size:0.82rem;line-height:1.7;color:var(--muted)}
+.body h2{
+  font-family:var(--disp);font-size:1.3rem;font-weight:600;
+  letter-spacing:-0.03em;color:var(--cream);text-transform:uppercase;
+  margin-bottom:12px;
 }
-.resp .json .k{color:var(--blue)}
-.resp .json .s{color:var(--green)}
-.resp .json .n{color:var(--pink)}
-.resp .json .b{color:var(--yellow)}
-.resp .json .x{color:var(--dim);font-style:italic}
+.body p{margin-bottom:12px;max-width:520px}
+.body .big{
+  font-family:var(--disp);font-size:clamp(1.2rem,3vw,1.8rem);font-weight:600;
+  line-height:1.2;letter-spacing:-0.03em;color:var(--cream);margin-bottom:12px;
+}
+.body .big .o{color:var(--orange)}
+.body .big .t{color:var(--teal)}
+
+/* ─── FEATURES (stamped blocks) ─── */
+.fwrap{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0 0}
+.fw{
+  background:var(--bg2);padding:16px 18px;position:relative;
+}
+.fw::before{
+  content:'>';position:absolute;top:16px;right:16px;
+  font-family:var(--mono);font-size:0.65rem;color:var(--dim);
+}
+.fw .l{font-family:var(--disp);font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px}
+.fw .l.json{color:var(--teal)}
+.fw .l.auth{color:var(--green)}
+.fw .l.ssn{color:var(--orange)}
+.fw .l.clr{color:var(--pink)}
+.fw .l.dl{color:var(--cream)}
+.fw .l.spd{color:var(--muted)}
+.fw .t{font-size:0.78rem;color:var(--muted);line-height:1.5}
 
 /* ─── COMPARE ─── */
-.compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:8px 0}
-.c-card{border-radius:8px;overflow:hidden;border:1px solid var(--border);font-family:var(--mono);font-size:0.78rem;line-height:1.7}
-.c-card .top{padding:8px 14px;font-size:0.72rem;font-weight:500;border-bottom:1px solid var(--border)}
-.c-card .body{padding:12px 14px;color:var(--muted);overflow-x:auto}
-.c-card.bad .top{color:var(--red);background:rgba(239,68,68,0.04)}
-.c-card.good .top{color:var(--green);background:rgba(74,222,128,0.04)}
-.c-card.bad{border-color:rgba(239,68,68,0.12)}
-.c-card.good{border-color:rgba(74,222,128,0.12)}
-
-/* ─── FEATURE LIST ─── */
-.flist{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin:4px 0}
-.flist .f{
-  background:var(--card);border:1px solid var(--border);border-radius:7px;
-  padding:16px 18px;font-family:var(--sans);
-}
-.flist .f .tag{
-  display:inline-block;padding:1px 7px;border-radius:3px;
-  font-family:var(--mono);font-size:0.65rem;font-weight:600;
-  letter-spacing:0.04em;margin-bottom:6px;text-transform:uppercase;
-}
-.flist .f .tag.json{background:rgba(96,165,250,0.1);color:var(--blue)}
-.flist .f .tag.auth{background:rgba(74,222,128,0.1);color:var(--green)}
-.flist .f .tag.ssn{background:rgba(251,191,36,0.1);color:var(--yellow)}
-.flist .f .tag.clr{background:rgba(244,114,182,0.1);color:var(--pink)}
-.flist .f .tag.dl{background:rgba(34,211,238,0.1);color:var(--cyan)}
-.flist .f .tag.spd{background:rgba(255,107,53,0.1);color:var(--orange)}
-.flist .f .nm{font-size:0.85rem;font-weight:600;color:var(--text);margin-bottom:2px}
-.flist .f .dsc{font-size:0.78rem;color:var(--muted);line-height:1.5}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+.cp{border:2px solid var(--dim);padding:14px 16px;background:var(--bg2)}
+.cp .top{font-family:var(--disp);font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px}
+.cp.bad .top{color:var(--pink)}
+.cp.good .top{color:var(--green)}
+.cp .code{font-size:0.72rem;line-height:1.6;color:var(--muted)}
+.cp .code .ok{color:var(--green)}
+.cp .code .no{color:var(--pink)}
+.cp.bad{border-color:rgba(217,117,140,0.2)}
+.cp.good{border-color:rgba(122,184,122,0.2)}
 
 /* ─── INSTALL ─── */
-.istack{display:flex;flex-direction:column;gap:6px;margin:4px 0}
-.istack .ir{
+.istack{display:flex;flex-direction:column;gap:4px;margin:8px 0}
+.ir{
   display:flex;align-items:center;gap:12px;
-  background:var(--card);border:1px solid var(--border);border-radius:7px;
-  padding:10px 16px;font-family:var(--mono);font-size:0.78rem;
+  background:var(--bg2);padding:10px 14px;
 }
-.istack .ir .lb{color:var(--dim);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.06em;min-width:44px}
-.istack .ir .cd{color:var(--text);flex:1}
-.istack .ir button{
-  padding:4px 10px;background:transparent;border:1px solid var(--border);border-radius:5px;
-  color:var(--muted);font-size:0.7rem;cursor:pointer;font-family:var(--sans);
-  transition:all 0.15s;white-space:nowrap;
+.ir .lb{font-size:0.6rem;color:var(--dim);text-transform:uppercase;letter-spacing:0.1em;min-width:40px}
+.ir .cd{color:var(--cream);flex:1;font-size:0.78rem}
+.ir button{
+  padding:3px 10px;background:transparent;border:1px solid var(--dim);
+  color:var(--muted);font-size:0.65rem;cursor:pointer;font-family:var(--mono);
+  transition:all 0.15s;
 }
-.istack .ir button:hover{background:var(--card);border-color:var(--dim);color:var(--text)}
-.istack .ir button.ok{background:rgba(74,222,128,0.1);border-color:var(--green);color:var(--green)}
+.ir button:hover{background:var(--bg2);border-color:var(--muted);color:var(--cream)}
+.ir button.ok{background:rgba(122,184,122,0.1);border-color:var(--green);color:var(--green)}
 
 /* ─── STATS ─── */
-.srow{display:flex;gap:8px;margin:4px 0}
-.srow .s{
-  flex:1;background:var(--card);border:1px solid var(--border);border-radius:7px;
-  padding:16px 12px;text-align:center;
-}
-.srow .s .v{font-family:var(--mono);font-size:1.3rem;font-weight:500;color:var(--text)}
-.srow .s .v .o{color:var(--orange)}
-.srow .s .l{font-size:0.7rem;color:var(--dim);margin-top:2px;text-transform:uppercase;letter-spacing:0.06em}
+.srow{display:flex;gap:1px;margin:8px 0;background:var(--dim)}
+.sv{flex:1;background:var(--bg2);padding:16px 12px;text-align:center}
+.sv .n{font-family:var(--disp);font-size:1.4rem;font-weight:600;color:var(--cream)}
+.sv .n .o{color:var(--orange)}
+.sv .l{font-size:0.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.12em;margin-top:2px}
 
 /* ─── PLAYGROUND ─── */
-.pbox{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--card);margin:4px 0}
-.pbox .tabs{display:flex;border-bottom:1px solid var(--border);overflow-x:auto}
-.pbox .tabs .tab{
-  padding:9px 16px;font-family:var(--mono);font-size:0.72rem;
-  color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;
-  transition:all 0.15s;user-select:none;white-space:nowrap;
+.pb{
+  border:2px solid var(--dim);background:var(--bg2);
+  margin:12px 0 0;position:relative;
 }
-.pbox .tabs .tab:hover{color:var(--text)}
-.pbox .tabs .tab.on{color:var(--orange);border-bottom-color:var(--orange)}
-.pbox .ir{
+.pb .tabs{display:flex;border-bottom:2px solid var(--dim);overflow-x:auto}
+.pb .tabs .t{
+  padding:8px 16px;font-family:var(--mono);font-size:0.68rem;
+  color:var(--dim);cursor:pointer;transition:all 0.15s;user-select:none;white-space:nowrap;
+}
+.pb .tabs .t:hover{color:var(--muted)}
+.pb .tabs .t.on{color:var(--orange);background:rgba(232,93,48,0.05)}
+.pb .ir{
   display:flex;align-items:center;gap:8px;
-  padding:9px 14px;border-bottom:1px solid var(--border);
-  font-family:var(--mono);font-size:0.78rem;
+  padding:8px 14px;font-family:var(--mono);font-size:0.78rem;
 }
-.pbox .ir .p{color:var(--green);user-select:none}
-.pbox .ir input{
+.pb .ir .p{color:var(--teal);user-select:none}
+.pb .ir input{
   flex:1;background:transparent;border:none;outline:none;
-  color:var(--text);font-family:var(--mono);font-size:0.78rem;caret-color:var(--green);
+  color:var(--cream);font-family:var(--mono);font-size:0.78rem;caret-color:var(--teal);
 }
-.pbox .ir input::placeholder{color:var(--dim)}
-.pbox .ir .go{
-  padding:5px 12px;background:var(--orange);color:#fff;border:none;border-radius:4px;
-  font-size:0.7rem;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all 0.15s;
+.pb .ir input::placeholder{color:var(--dim)}
+.pb .ir .go{
+  padding:4px 14px;background:var(--orange);color:var(--bg);border:none;
+  font-family:var(--disp);font-size:0.65rem;font-weight:600;text-transform:uppercase;
+  letter-spacing:0.06em;cursor:pointer;transition:all 0.15s;
 }
-.pbox .ir .go:hover{box-shadow:0 3px 12px rgba(255,107,53,0.25)}
-.pbox .out{
-  padding:14px 18px;font-family:var(--mono);font-size:0.78rem;
-  line-height:1.7;min-height:120px;max-height:300px;overflow-y:auto;white-space:pre-wrap;
+.pb .ir .go:hover{background:transparent;color:var(--orange);border:1px solid var(--orange);padding:3px 13px}
+.pb .out{
+  padding:12px 16px;font-family:var(--mono);font-size:0.75rem;
+  line-height:1.6;min-height:100px;max-height:280px;overflow-y:auto;white-space:pre-wrap;
+  border-top:1px solid var(--dim);
 }
-.pbox .out .empty{color:var(--dim);text-align:center;padding:24px 0}
-.pbox .out .k{color:var(--blue)}
-.pbox .out .s{color:var(--green)}
-.pbox .out .n{color:var(--pink)}
-.pbox .out .b{color:var(--yellow)}
-.pbox .out .h{color:var(--cyan)}
+.pb .out .empty{color:var(--dim);text-align:center;padding:20px 0}
+.pb .out .k{color:var(--teal)}
+.pb .out .s{color:var(--green)}
+.pb .out .n{color:var(--pink)}
+.pb .out .b{color:var(--cream)}
+.pb .out .h{color:var(--orange)}
 
 /* ─── FOOTER ─── */
-footer{border-top:1px solid var(--border);padding:20px 0;margin-top:64px}
-footer .inner{
-  display:flex;justify-content:space-between;align-items:center;
-  font-size:0.78rem;color:var(--dim);
-}
-footer a{color:var(--muted);text-decoration:none;transition:color 0.15s}
-footer a:hover{color:var(--orange)}
+ft{border-top:2px solid var(--dim);padding:16px 0;margin-top:60px;display:block}
+ft .i{display:flex;justify-content:space-between;align-items:center;font-size:0.72rem;color:var(--dim)}
+ft a{color:var(--muted);text-decoration:none;transition:color 0.15s}
+ft a:hover{color:var(--cream)}
 
 /* ─── RESPONSIVE ─── */
 @media(max-width:650px){
-  .page{padding:28px 18px 40px}
-  header{margin-bottom:40px}
-  .req{margin-bottom:36px}
-  .compare{grid-template-columns:1fr}
-  .flist{grid-template-columns:1fr}
-  .srow{flex-wrap:wrap}
-  .srow .s{min-width:45%}
+  .page{padding:32px 20px 48px}
+  .hdr{margin-bottom:48px}
+  .hero{margin-bottom:48px}
+  .block{margin-bottom:40px}
+  .fwrap{grid-template-columns:1fr}
+  .cmp{grid-template-columns:1fr}
+  .hdr-gh{font-size:0.65rem}
 }
 </style>
 </head>
@@ -215,158 +231,129 @@ footer a:hover{color:var(--orange)}
 
 <div class="page">
 
-  <!-- HEADER -->
-  <header>
-    <a href="#" class="l"><span>$</span> xh</a>
-    <a href="https://github.com/ducaale/xh" target="_blank" rel="noopener" class="gh">GitHub</a>
-  </header>
+  <div class="hdr">
+    <a href="#" class="hdr-l">xh<span class="o">.</span></a>
+    <a href="https://github.com/ducaale/xh" target="_blank" rel="noopener" class="hdr-gh">GitHub →</a>
+  </div>
 
-  <!-- ─── 1. INTRO ─── -->
-  <div class="req">
-    <div class="req-cmd">
-      <span class="prompt">$</span>
-      <span class="brand">xh</span>
-      <span class="url"><span class="h">get</span> /</span>
+  <!-- 1. HERO -->
+  <div class="hero">
+    <div class="tag">✦ 7.9k stars · rust · mit</div>
+    <h1>
+      requests<br>
+      <span class="o">minus&nbsp;the</span><br>
+      <span class="t">noise</span>
+    </h1>
+    <div class="sub">
+      xh is a CLI HTTP client. Colourised output, native auth, persistent sessions — one Rust binary, zero ceremony.
     </div>
-    <hr class="req-hr">
-    <div class="resp">
-      <h1>HTTP requests,<br><span class="o">minus the noise</span></h1>
-      <p>xh is a CLI HTTP client that formats responses, handles auth, persists sessions, and doesn't make you memorise flags. Written in Rust. One binary. Zero setup.</p>
-      <div class="btns">
-        <a class="btn prim" href="#install">Get started</a>
-        <a class="btn sec" href="#play">Try online</a>
-      </div>
-      <div class="json" style="margin-top:20px">
-        {<br>
-        &nbsp;&nbsp;<span class="k">"name"</span>: <span class="s">"xh"</span>,<br>
-        &nbsp;&nbsp;<span class="k">"stars"</span>: <span class="n">7936</span>,<br>
-        &nbsp;&nbsp;<span class="k">"language"</span>: <span class="s">"Rust"</span>,<br>
-        &nbsp;&nbsp;<span class="k">"license"</span>: <span class="s">"MIT"</span><br>
-        }
+    <div class="btns">
+      <a href="#install" class="prim">Install</a>
+      <a href="#play" class="sec">Try it →</a>
+    </div>
+  </div>
+
+  <!-- 2. FEATURES -->
+  <div class="block">
+    <div class="block-cmd"><span class="arrow">▸</span> <span class="method">get</span> <span class="endpoint">/features</span></div>
+    <div class="block-hr"></div>
+    <div class="body">
+      <div class="big">everything <span class="o">reads</span> the moment you <span class="t">press enter</span></div>
+      <div class="fwrap">
+        <div class="fw"><div class="l json">▸ json</div><div class="t">Auto-formatted. Colourised. No jq required.</div></div>
+        <div class="fw"><div class="l auth">▸ auth</div><div class="t">Bearer tokens, basic auth, API keys — inline.</div></div>
+        <div class="fw"><div class="l ssn">▸ sessions</div><div class="t">Authenticate once. Reuse across requests.</div></div>
+        <div class="fw"><div class="l clr">▸ colour</div><div class="t">Cyan headers, blue keys, green strings. Readable.</div></div>
+        <div class="fw"><div class="l dl">▸ download</div><div class="t">Progress bars, resume, auto-filename.</div></div>
+        <div class="fw"><div class="l spd">▸ rust</div><div class="t">Single binary. No Node, no Python. Instant.</div></div>
       </div>
     </div>
   </div>
 
-  <!-- ─── 2. FEATURES ─── -->
-  <div class="req">
-    <div class="req-cmd">
-      <span class="prompt">$</span>
-      <span class="brand">xh</span>
-      <span class="url"><span class="h">get</span> /features</span>
-    </div>
-    <hr class="req-hr">
-    <div class="resp">
-      <div class="flist">
-        <div class="f"><span class="tag json">JSON</span><div class="nm">Auto-formatted output</div><div class="dsc">Every response is colourised and structured. No piping to jq.</div></div>
-        <div class="f"><span class="tag auth">Auth</span><div class="nm">Native auth support</div><div class="dsc">Bearer tokens, basic auth, API keys. Inline, zero ceremony.</div></div>
-        <div class="f"><span class="tag ssn">Sessions</span><div class="nm">Persistent state</div><div class="dsc">Auth once, reuse. Cookies and headers survive across requests.</div></div>
-        <div class="f"><span class="tag dl">Downloads</span><div class="nm">File download</div><div class="dsc">Progress bars, resume support, auto-filename detection.</div></div>
-        <div class="f"><span class="tag clr">Colour</span><div class="nm">Syntax highlighting</div><div class="dsc">Headers cyan, keys blue, strings green. Readable immediately.</div></div>
-        <div class="f"><span class="tag spd">Rust</span><div class="nm">Blazing fast</div><div class="dsc">Single static binary. No runtime dependencies. Zero config.</div></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ─── 3. COMPARE ─── -->
-  <div class="req">
-    <div class="req-cmd">
-      <span class="prompt">$</span>
-      <span class="brand">xh</span>
-      <span class="url"><span class="h">get</span> /compare</span>
-    </div>
-    <hr class="req-hr">
-    <div class="resp">
-      <p>One POST request. Two experiences.</p>
-      <div class="compare">
-        <div class="c-card bad">
-          <div class="top">curl — 16 flags</div>
-          <div class="body">curl -s -H "Accept: application/json" \<br>  -H "Authorization: Bearer $TOKEN" \<br>  -X POST https://api.example.com/data \<br>  -d '{"name":"xh","type":"tool"}' \<br>  | jq .<br><span style="color:var(--dim)">// still debugging</span></div>
+  <!-- 3. COMPARE -->
+  <div class="block">
+    <div class="block-cmd"><span class="arrow">▸</span> <span class="method">get</span> <span class="endpoint">/compare</span></div>
+    <div class="block-hr"></div>
+    <div class="body">
+      <div class="big">same request. <span class="o">16 flags</span> vs <span class="t">zero</span>.</div>
+      <div class="cmp">
+        <div class="cp bad">
+          <div class="top">curl</div>
+          <div class="code">curl -s -H "Accept: application/json" \<br>  -H "Authorization: Bearer $TOKEN" \<br>  -X POST https://api.example.com/data \<br>  -d '{"name":"xh"}' | jq .<br><br><span class="no">↑ 16 flags, still debugging</span></div>
         </div>
-        <div class="c-card good">
-          <div class="top">xh — 0 flags</div>
-          <div class="body">xh POST https://api.example.com/data \<br>  name=xh type=tool \<br>  Authorization:"Bearer $TOKEN"<br><br><span style="color:var(--green)">✓ HTTP/2.0 201 — readable. coloured. done.</span></div>
+        <div class="cp good">
+          <div class="top">xh</div>
+          <div class="code">xh POST https://api.example.com/data \<br>  name=xh Authorization:"Bearer $TOKEN"<br><br><span class="ok">✓ 0 flags. readable. coloured. done.</span></div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ─── 4. PLAYGROUND ─── -->
-  <div class="req" id="play">
-    <div class="req-cmd">
-      <span class="prompt">$</span>
-      <span class="brand">xh</span>
-      <span class="url"><span class="h">post</span> /try</span>
-    </div>
-    <hr class="req-hr">
-    <div class="resp">
-      <p>Type a command and see how xh would format it.</p>
-      <div class="pbox">
+  <!-- 4. PLAYGROUND -->
+  <div class="block" id="play">
+    <div class="block-cmd"><span class="arrow">▸</span> <span class="method">post</span> <span class="endpoint">/try</span></div>
+    <div class="block-hr"></div>
+    <div class="body">
+      <p>Type a command. See exactly what xh would return.</p>
+      <div class="pb">
         <div class="tabs">
-          <div class="tab on" data-p="users">GET /users</div>
-          <div class="tab" data-p="post">POST /data</div>
-          <div class="tab" data-p="auth">Auth</div>
-          <div class="tab" data-p="headers">Headers</div>
+          <div class="t on" data-p="users">get /users</div>
+          <div class="t" data-p="post">post /data</div>
+          <div class="t" data-p="auth">auth</div>
+          <div class="t" data-p="headers">headers</div>
         </div>
         <div class="ir">
           <span class="p">$</span>
           <input id="inp" type="text" placeholder="xh GET https://api.example.com/..." spellcheck="false" autocomplete="off">
-          <button class="go" id="run">Run</button>
+          <button class="go" id="run">run</button>
         </div>
         <div class="out" id="out"><div class="empty">▸ pick a preset or type a command</div></div>
       </div>
     </div>
   </div>
 
-  <!-- ─── 5. INSTALL ─── -->
-  <div class="req" id="install">
-    <div class="req-cmd">
-      <span class="prompt">$</span>
-      <span class="brand">xh</span>
-      <span class="url"><span class="h">get</span> /install</span>
-    </div>
-    <hr class="req-hr">
-    <div class="resp">
+  <!-- 5. INSTALL -->
+  <div class="block" id="install">
+    <div class="block-cmd"><span class="arrow">▸</span> <span class="method">get</span> <span class="endpoint">/install</span></div>
+    <div class="block-hr"></div>
+    <div class="body">
+      <div class="big">one line.<span class="o"> any</span> machine.</div>
       <div class="istack">
-        <div class="ir"><span class="lb">macOS</span><span class="cd">brew install xh</span><button data-c="brew install xh">Copy</button></div>
-        <div class="ir"><span class="lb">Any</span><span class="cd">cargo install xh</span><button data-c="cargo install xh">Copy</button></div>
-        <div class="ir"><span class="lb">Linux</span><span class="cd">snap install xh</span><button data-c="snap install xh">Copy</button></div>
-        <div class="ir"><span class="lb">Nix</span><span class="cd">nix-shell -p xh</span><button data-c="nix-shell -p xh">Copy</button></div>
+        <div class="ir"><span class="lb">macos</span><span class="cd">brew install xh</span><button data-c="brew install xh">copy</button></div>
+        <div class="ir"><span class="lb">any</span><span class="cd">cargo install xh</span><button data-c="cargo install xh">copy</button></div>
+        <div class="ir"><span class="lb">linux</span><span class="cd">snap install xh</span><button data-c="snap install xh">copy</button></div>
+        <div class="ir"><span class="lb">nix</span><span class="cd">nix-shell -p xh</span><button data-c="nix-shell -p xh">copy</button></div>
       </div>
     </div>
   </div>
 
-  <!-- ─── 6. STATS ─── -->
-  <div class="req">
-    <div class="req-cmd">
-      <span class="prompt">$</span>
-      <span class="brand">xh</span>
-      <span class="url"><span class="h">get</span> /stats</span>
-    </div>
-    <hr class="req-hr">
-    <div class="resp">
+  <!-- 6. STATS -->
+  <div class="block">
+    <div class="block-cmd"><span class="arrow">▸</span> <span class="method">get</span> <span class="endpoint">/stats</span></div>
+    <div class="block-hr"></div>
+    <div class="body">
       <div class="srow">
-        <div class="s"><div class="v">7.9<span class="o">k</span></div><div class="l">Stars</div></div>
-        <div class="s"><div class="v">1.8<span class="o">k</span></div><div class="l">Commits</div></div>
-        <div class="s"><div class="v">39</div><div class="l">Releases</div></div>
-        <div class="s"><div class="v">99<span class="o">%</span></div><div class="l">Rust</div></div>
+        <div class="sv"><div class="n">7.9<span class="o">k</span></div><div class="l">stars</div></div>
+        <div class="sv"><div class="n">1.8<span class="o">k</span></div><div class="l">commits</div></div>
+        <div class="sv"><div class="n">39</div><div class="l">releases</div></div>
+        <div class="sv"><div class="n">99<span class="o">%</span></div><div class="l">rust</div></div>
       </div>
     </div>
   </div>
 
-  <!-- FOOTER -->
-  <footer>
-    <div class="inner">
-      <span>Concept for <a href="https://github.com/ducaale/xh" target="_blank" rel="noopener">xh</a> by <a href="https://blok-web-studio.netlify.app" target="_blank" rel="noopener">BLOK.</a></span>
-      <span>Fictional · Real design</span>
+  <ft>
+    <div class="i">
+      <span>concept for <a href="https://github.com/ducaale/xh" target="_blank" rel="noopener">xh</a> · <a href="https://blok-web-studio.netlify.app" target="_blank" rel="noopener">blok.</a></span>
+      <span>fictional · real design</span>
     </div>
-  </footer>
+  </ft>
 </div>
 
 <script>
 // ─── PLAYGROUND ───
 (function(){
   const i=document.getElementById('inp'),o=document.getElementById('out'),r=document.getElementById('run');
-  const tabs=document.querySelectorAll('.tab');
+  const tabs=document.querySelectorAll('.pb .t');
   const demos={
     users:{c:'xh GET https://api.example.com/users',r:'HTTP/2.0 200 OK\ncontent-type: application/json\n\n{\n  "users": [\n    {"id":1,"name":"Alice","role":"admin"},\n    {"id":2,"name":"Bob","role":"editor"},\n    {"id":3,"name":"Carol","role":"viewer"}\n  ],\n  "total": 3\n}'},
     post:{c:'xh POST https://api.example.com/data name=xh type=tool',r:'HTTP/2.0 201 Created\ncontent-type: application/json\n\n{\n  "id": "req_abc123",\n  "name": "xh",\n  "type": "tool",\n  "created": "2024-06-15T10:30:00Z"\n}'},
@@ -405,16 +392,16 @@ footer a:hover{color:var(--orange)}
 
 // ─── COPY ───
 document.addEventListener('click',async e=>{
-  const b=e.target.closest('.istack button');if(!b)return;
+  const b=e.target.closest('.ir button');if(!b)return;
   const c=b.dataset.c;if(!c)return;
-  try{await navigator.clipboard.writeText(c);b.textContent='✓';b.classList.add('ok');setTimeout(()=>{b.textContent='Copy';b.classList.remove('ok')},1800)}catch{}
+  try{await navigator.clipboard.writeText(c);b.textContent='✓';b.classList.add('ok');setTimeout(()=>{b.textContent='copy';b.classList.remove('ok')},1800)}catch{}
 });
 
 // ─── SCROLL REVEAL ───
 (function(){
   if(!('IntersectionObserver'in window))return;
   const o=new IntersectionObserver(e=>{e.forEach(e=>{if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)'}})},{threshold:0.06,rootMargin:'0px 0px -30px 0px'});
-  document.querySelectorAll('.flist .f,.c-card,.istack .ir,.srow .s,.pbox').forEach(el=>{el.style.opacity='0';el.style.transform='translateY(12px)';el.style.transition='opacity 0.35s ease,transform 0.35s ease';o.observe(el)});
+  document.querySelectorAll('.fw,.cp,.ir,.sv,.pb').forEach(el=>{el.style.opacity='0';el.style.transform='translateY(10px)';el.style.transition='opacity 0.35s ease,transform 0.35s ease';o.observe(el)});
 })();
 </script>
 </body>
